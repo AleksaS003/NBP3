@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Admin Dashboard</h1>
+        
+        <div>
+            <h2>Statistics</h2>
+            <ul>
+                <li>Total Users: {{ total_users }}</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h2>Admin Actions</h2>
+            <ul>
+                <li><a href="{% url 'admin_users' %}">Manage Users</a></li>
+                <li><a href="/admin/">Django Admin</a></li>
+            </ul>
+        </div>
+        
+        <div>
+            <h2>Recent Users</h2>
+            {% if recent_users %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in recent_users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_user_detail' user.id %}">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No users found.</p>
+            {% endif %}
+        </div>
+        
+        <div>
+            <h2>Recent Activities</h2>
+            {% if recent_activities %}
+                <ul>
+                    {% for activity in recent_activities %}
+                        <li>
+                            {{ activity.user.username }} - {{ activity.action }} - {{ activity.timestamp|date:"Y-m-d H:i:s" }}
+                            {% if activity.ip_address %}
+                                (IP: {{ activity.ip_address }})
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No recent activities.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

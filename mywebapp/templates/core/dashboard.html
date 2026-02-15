@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - My Web App{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Welcome to Your Dashboard, {{ user.username }}!</h1>
+        
+        <div>
+            <h2>Quick Actions</h2>
+            <ul>
+                <li><a href="{% url 'profile' %}">View Profile</a></li>
+                <li><a href="{% url 'profile_edit' %}">Edit Profile</a></li>
+            </ul>
+        </div>
+        
+        <div>
+            <h2>Your Information</h2>
+            <table>
+                <tr>
+                    <th>Username:</th>
+                    <td>{{ user.username }}</td>
+                </tr>
+                <tr>
+                    <th>Email:</th>
+                    <td>{{ user.email|default:"Not provided" }}</td>
+                </tr>
+                <tr>
+                    <th>Phone Number:</th>
+                    <td>{{ user.phone_number|default:"Not provided" }}</td>
+                </tr>
+                <tr>
+                    <th>Address:</th>
+                    <td>{{ user.address|default:"Not provided" }}</td>
+                </tr>
+                <tr>
+                    <th>Member Since:</th>
+                    <td>{{ user.date_joined|date:"F j, Y" }}</td>
+                </tr>
+                <tr>
+                    <th>Last Login:</th>
+                    <td>{{ user.last_login|date:"F j, Y H:i" }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div>
+            <h2>Recent Activity</h2>
+            {% if recent_activities %}
+                <ul>
+                    {% for activity in recent_activities %}
+                        <li>
+                            {{ activity.action }} - {{ activity.timestamp|date:"F j, Y H:i" }}
+                            {% if activity.details %}
+                                ({{ activity.details }})
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No recent activity.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

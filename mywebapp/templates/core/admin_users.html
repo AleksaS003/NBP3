@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>User Management</h1>
+        
+        <div>
+            <a href="{% url 'admin_dashboard' %}">Back to Admin Dashboard</a>
+        </div>
+        
+        <div>
+            <h2>All Users</h2>
+            {% if users %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Admin</th>
+                            <th>Staff</th>
+                            <th>Active</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.is_admin|yesno:"Yes,No" }}</td>
+                                <td>{{ user.is_staff|yesno:"Yes,No" }}</td>
+                                <td>{{ user.is_active|yesno:"Yes,No" }}</td>
+                                <td>{{ user.date_joined|date:"Y-m-d" }}</td>
+                                <td>
+                                    <a href="{% url 'admin_user_detail' user.id %}">View</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No users found.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

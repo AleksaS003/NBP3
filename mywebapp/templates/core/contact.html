@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - My Web App{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Contact Us</h1>
+        <p>Have questions? We'd love to hear from you.</p>
+        
+        <div>
+            <h2>Send us a message</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="subject">Subject:</label>
+                    <input type="text" id="subject" name="subject" required>
+                </div>
+                <div>
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" rows="5" required></textarea>
+                </div>
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+        
+        <div>
+            <h2>Other ways to reach us</h2>
+            <p><strong>Email:</strong> support@mywebapp.com</p>
+            <p><strong>Phone:</strong> +1 (555) 987-6543</p>
+            <p><strong>Office Hours:</strong> Monday - Friday, 9am - 5pm</p>
+        </div>
+    </div>
+{% endblock %}

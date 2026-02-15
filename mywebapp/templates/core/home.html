@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - My Web App{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Welcome to My Web App</h1>
+        <p>This is a simple web application built with Django and MongoDB.</p>
+        
+        {% if not user.is_authenticated %}
+            <div>
+                <h2>Get Started</h2>
+                <p>Join our community today!</p>
+                <div>
+                    <a href="{% url 'register' %}">Register</a>
+                    <a href="{% url 'login' %}">Login</a>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                <h2>Welcome back, {{ user.username }}!</h2>
+                <p>Go to your <a href="{% url 'dashboard' %}">dashboard</a> to get started.</p>
+            </div>
+        {% endif %}
+        
+        <div>
+            <h2>Features</h2>
+            <ul>
+                <li>User Authentication</li>
+                <li>User Profiles</li>
+                <li>Activity Logging</li>
+                <li>Admin Dashboard</li>
+                <li>MongoDB Integration</li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}

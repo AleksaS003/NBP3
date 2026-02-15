@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>User Details: {{ view_user.username }}</h1>
+        
+        <div>
+            <a href="{% url 'admin_users' %}">Back to User List</a>
+            <a href="{% url 'admin_dashboard' %}">Back to Admin Dashboard</a>
+        </div>
+        
+        <div>
+            <h2>User Information</h2>
+            <table>
+                <tr>
+                    <th>User ID:</th>
+                    <td>{{ view_user.id }}</td>
+                </tr>
+                <tr>
+                    <th>Username:</th>
+                    <td>{{ view_user.username }}</td>
+                </tr>
+                <tr>
+                    <th>Email:</th>
+                    <td>{{ view_user.email|default:"Not provided" }}</td>
+                </tr>
+                <tr>
+                    <th>Phone Number:</th>
+                    <td>{{ view_user.phone_number|default:"Not provided" }}</td>
+                </tr>
+                <tr>
+                    <th>Address:</th>
+                    <td>{{ view_user.address|default:"Not provided" }}</td>
+                </tr>
+                <tr>
+                    <th>Is Admin:</th>
+                    <td>{{ view_user.is_admin|yesno:"Yes,No" }}</td>
+                </tr>
+                <tr>
+                    <th>Is Staff:</th>
+                    <td>{{ view_user.is_staff|yesno:"Yes,No" }}</td>
+                </tr>
+                <tr>
+                    <th>Is Active:</th>
+                    <td>{{ view_user.is_active|yesno:"Yes,No" }}</td>
+                </tr>
+                <tr>
+                    <th>Date Joined:</th>
+                    <td>{{ view_user.date_joined|date:"F j, Y H:i:s" }}</td>
+                </tr>
+                <tr>
+                    <th>Last Login:</th>
+                    <td>{{ view_user.last_login|date:"F j, Y H:i:s" }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div>
+            <h2>User Activity Log</h2>
+            {% if user_activities %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Timestamp</th>
+                            <th>IP Address</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in user_activities %}
+                            <tr>
+                                <td>{{ activity.action }}</td>
+                                <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ activity.ip_address|default:"N/A" }}</td>
+                                <td>
+                                    {% if activity.details %}
+                                        {{ activity.details }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No activity logged for this user.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

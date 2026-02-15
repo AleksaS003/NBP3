@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - My Web App{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Login to Your Account</h1>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div>
+                    <strong>Invalid username or password. Please try again.</strong>
+                </div>
+            {% endif %}
+            
+            <div>
+                <label for="id_username">Username:</label>
+                {{ form.username }}
+            </div>
+            
+            <div>
+                <label for="id_password">Password:</label>
+                {{ form.password }}
+            </div>
+            
+            <button type="submit">Login</button>
+        </form>
+        
+        <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+    </div>
+{% endblock %}
