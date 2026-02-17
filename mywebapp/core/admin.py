@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, UserProfile, ActivityLog
+from .models import Cart, User, UserProfile, ActivityLog, Product, Order
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'is_admin', 'is_staff', 'date_joined')
@@ -22,7 +22,21 @@ class ActivityLogAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'action')
     readonly_fields = ('timestamp',)
 
+class ProductAdmin(admin.ModelAdmin):
+    list_display=('name', 'price', 'category', 'stock')
+    search_fields = ('name', 'category')
+
+class OrderAdmin(admin.ModelAdmin):
+    list_display=('id', 'user', 'total_price', 'status', 'created_at')
+
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'updated_at')
+    readonly_fields = ('user', 'items', 'updated_at')
+
 # Register models
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(ActivityLog, ActivityLogAdmin)
+admin.site.register(Product, ProductAdmin)
+admin.site.register(Order, OrderAdmin)
+admin.site.register(Cart,CartAdmin)

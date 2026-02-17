@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm
-from .models import User, ActivityLog, UserProfile
+from .models import Cart, Order, User, ActivityLog, UserProfile, Product
 
 # Public views
 def home(request):
@@ -192,3 +192,117 @@ def admin_user_detail(request, user_id):
         'user_activities': user_activities,
     }
     return render(request, 'core/admin_user_detail.html', context)
+
+
+def product_list(request):
+    products= Product.objects.all()
+    context = {
+        'title': 'Shop',
+        'products': products,
+    }
+    return render(request, 'core/product_list.html',context)
+
+def product_detail(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        messages.error(request, 'Product not found.')
+        return redirect('product_list')
+    context = {
+        'title': product.name,
+        'product': product,
+    }
+    return render(request,'core/product_detail.html',context)
+
+def add_to_cart(request, product_id):
+    
+    cart, created = Cart.objects.get_or_create(user=request.user)
+
+    items = cart.items
+    found = False
+    
+    for item in items:
+        if item['product_id'] == product_id:
+            item['quantity'] += 1
+            found = True
+            break
+            
+    if not found:
+        items.append({'product_id': product_id, 'quantity': 1})
+    
+    cart.items = items
+    cart.save()
+    messages.success(request, "Added to permanent cart!")
+    return redirect('product_list')
+
+def view_cart(request):
+    try:
+        cart = Cart.objects.get(user=request.user)
+    except Cart.DoesNotExist:
+        cart = Cart.objects.create(user=request.user)
+        
+    cart_items = []
+    total = 0
+    
+    for item in cart.items:
+        product = Product.objects.get(id=item['product_id'])
+        item_total = product.price * item['quantity']
+        total += item_total
+        cart_items.append({
+            'product': product,
+            'quantity': item['quantity'],
+            'item_total': item_total
+        })
+        
+    return render(request, 'core/cart.html', {'cart_items': cart_items, 'total': total})
+
+def remove_from_cart(request, product_id):
+    try:
+        cart = Cart.objects.get(user=request.user)
+        
+        cart.items = [item for item in cart.items if item['product_id'] != product_id]
+        cart.save()
+        messages.success(request, "Item removed from your permanent cart.")
+    except Cart.DoesNotExist:
+        pass 
+        
+    return redirect('view_cart')
+
+def checkout(request):
+    try:
+        cart = Cart.objects.get(user=request.user)
+        if not cart.items:
+            messages.error(request, "Your cart is empty.")
+            return redirect('product_list')
+
+   
+        total_price = 0
+        order_items = []
+        for item in cart.items:
+            product = Product.objects.get(id=item['product_id'])
+            item_total = product.price * item['quantity']
+            total_price += item_total
+          
+            order_items.append({
+                'product_name': product.name,
+                'quantity': item['quantity'],
+                'price_at_purchase': float(product.price)
+            })
+
+        
+        Order.objects.create(
+            user=request.user,
+            items=order_items,
+            total_price=total_price,
+            status='Pending'
+        )
+
+      
+        cart.items = []
+        cart.save()
+
+        messages.success(request, "Order placed successfully!")
+        return redirect('dashboard')
+        
+    except Cart.DoesNotExist:
+        return redirect('product_list')

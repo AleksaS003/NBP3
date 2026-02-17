@@ -21,4 +21,14 @@ urlpatterns = [
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/users/', views.admin_users, name='admin_users'),
     path('admin/user/<int:user_id>/', views.admin_user_detail, name='admin_user_detail'),
+
+    #proizvodi
+    path('products/', views.product_list, name='product_list'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+
+    #za korpu
+    path('cart/', views.view_cart, name='view_cart'),
+    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('checkout/', views.checkout, name='checkout'),
 ]

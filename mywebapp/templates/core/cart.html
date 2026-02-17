@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Cart - My Web App{% endblock %}
+
+{% block content %}
+    <div>
+        <h1>Your Shopping Cart</h1>
+        <p><a href="{% url 'product_list' %}"><- Continue Shopping</a></p>
+
+        {% if cart_items %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.product.price }} USD</td>
+                            <td>{{ item.item_total }} USD</td>
+                            <td>
+                                <a href="{% url 'remove_from_cart' item.product.id %}">Remove</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div>
+                <h3>Total: {{ total }} USD</h3>
+                <form action="{% url 'checkout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit">Place Order (Checkout)</button>
+                </form>
+            </div>
+        {% else %}
+            <p>Your cart is empty. <a href="{% url 'product_list' %}">Start shopping!</a></p>
+        {% endif %}
+    </div>
+{% endblock %}
