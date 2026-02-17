@@ -53,8 +53,8 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     image_url = models.CharField(max_length=255, blank=True)
     
-    # Popravljeno: JSONField sa odgovarajućim default-om i validacijom
-    specifications = models.JSONField(default=dict, blank=True)
+    # PROMENA: Umesto JSONField koristimo TextField
+    specifications = models.TextField(default='{}', blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -64,33 +64,44 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     
-    def clean(self):
-        """Validacija i konverzija specifications polja"""
-        if isinstance(self.specifications, str):
+    def set_specifications(self, data):
+        """Čuva dict kao JSON string"""
+        if isinstance(data, dict):
+            self.specifications = json.dumps(data)
+        elif isinstance(data, str):
+            # Proveri da li je već JSON string
             try:
-                self.specifications = json.loads(self.specifications)
-            except json.JSONDecodeError:
-                self.specifications = {}
-        elif self.specifications is None:
-            self.specifications = {}
-        elif not isinstance(self.specifications, (dict, list)):
-            self.specifications = {}
+                json.loads(data)
+                self.specifications = data
+            except:
+                self.specifications = json.dumps({})
+        else:
+            self.specifications = json.dumps({})
+    
+    def get_specifications(self):
+        """Vraća specifications kao dict"""
+        if not self.specifications:
+            return {}
+        try:
+            if isinstance(self.specifications, str):
+                return json.loads(self.specifications)
+            return self.specifications
+        except:
+            return {}
     
     def save(self, *args, **kwargs):
-        """Pozovi clean pre save-a"""
-        self.clean()
+        # Osiguraj da je specifications uvek JSON string
+        if hasattr(self, 'specifications') and self.specifications:
+            if isinstance(self.specifications, dict):
+                self.specifications = json.dumps(self.specifications)
+        elif not self.specifications:
+            self.specifications = '{}'
         super().save(*args, **kwargs)
-    
-    def get_specifications_dict(self):
-        """Pomoćna metoda za bezbedno dohvatanje specifikacija"""
-        if isinstance(self.specifications, dict):
-            return self.specifications
-        return {}
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    # Popravljeno: Dodat default=list
-    items = models.JSONField(default=list)
+    # PROMENA: Umesto JSONField koristimo TextField
+    items = models.TextField(default='[]')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=50, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -101,32 +112,42 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
     
-    def clean(self):
-        """Validacija items polja"""
-        if isinstance(self.items, str):
+    def set_items(self, items_list):
+        """Čuva listu kao JSON string"""
+        if isinstance(items_list, list):
+            self.items = json.dumps(items_list)
+        elif isinstance(items_list, str):
             try:
-                self.items = json.loads(self.items)
-            except json.JSONDecodeError:
-                self.items = []
-        elif self.items is None:
-            self.items = []
-        elif not isinstance(self.items, list):
-            self.items = [self.items] if self.items else []
+                json.loads(items_list)
+                self.items = items_list
+            except:
+                self.items = json.dumps([])
+        else:
+            self.items = json.dumps([])
+    
+    def get_items(self):
+        """Vraća items kao listu"""
+        if not self.items:
+            return []
+        try:
+            if isinstance(self.items, str):
+                return json.loads(self.items)
+            return self.items
+        except:
+            return []
     
     def save(self, *args, **kwargs):
-        self.clean()
+        if hasattr(self, 'items') and self.items:
+            if isinstance(self.items, list):
+                self.items = json.dumps(self.items)
+        elif not self.items:
+            self.items = '[]'
         super().save(*args, **kwargs)
-    
-    def get_items_list(self):
-        """Pomoćna metoda za bezbedno dohvatanje items-a"""
-        if isinstance(self.items, list):
-            return self.items
-        return []
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
-    # Ovo je već bilo dobro
-    items = models.JSONField(default=list, blank=True)
+    # PROMENA: Umesto JSONField koristimo TextField
+    items = models.TextField(default='[]', blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -135,24 +156,34 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart for {self.user.username}"
     
-    def clean(self):
-        """Validacija items polja"""
-        if isinstance(self.items, str):
+    def set_items(self, items_list):
+        """Čuva listu kao JSON string"""
+        if isinstance(items_list, list):
+            self.items = json.dumps(items_list)
+        elif isinstance(items_list, str):
             try:
-                self.items = json.loads(self.items)
-            except json.JSONDecodeError:
-                self.items = []
-        elif self.items is None:
-            self.items = []
-        elif not isinstance(self.items, list):
-            self.items = [self.items] if self.items else []
+                json.loads(items_list)
+                self.items = items_list
+            except:
+                self.items = json.dumps([])
+        else:
+            self.items = json.dumps([])
+    
+    def get_items(self):
+        """Vraća items kao listu"""
+        if not self.items:
+            return []
+        try:
+            if isinstance(self.items, str):
+                return json.loads(self.items)
+            return self.items
+        except:
+            return []
     
     def save(self, *args, **kwargs):
-        self.clean()
+        if hasattr(self, 'items') and self.items:
+            if isinstance(self.items, list):
+                self.items = json.dumps(self.items)
+        elif not self.items:
+            self.items = '[]'
         super().save(*args, **kwargs)
-    
-    def get_items_list(self):
-        """Pomoćna metoda za bezbedno dohvatanje items-a"""
-        if isinstance(self.items, list):
-            return self.items
-        return []
