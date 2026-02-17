@@ -4,7 +4,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, CheckoutForm
 from .models import Cart, Order, User, ActivityLog, UserProfile, Product
 
 # Public views
@@ -99,11 +99,13 @@ def logout_view(request):
 def dashboard(request):
     """User dashboard view"""
     recent_activities = ActivityLog.objects.filter(user=request.user)[:10]
+    recent_orders = Order.objects.filter(user=request.user).order_by('-created_at')[:5]
     
     context = {
         'title': 'Dashboard',
         'user': request.user,
         'recent_activities': recent_activities,
+        'recent_orders': recent_orders,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -155,14 +157,20 @@ def profile_edit(request):
 def admin_dashboard(request):
     """Admin dashboard view"""
     total_users = User.objects.count()
+    total_orders = Order.objects.count()
+    pending_orders = Order.objects.filter(status='Pending').count()
     recent_users = User.objects.order_by('-date_joined')[:10]
     recent_activities = ActivityLog.objects.all()[:20]
+    recent_orders = Order.objects.all().order_by('-created_at')[:10]
     
     context = {
         'title': 'Admin Dashboard',
         'total_users': total_users,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
         'recent_users': recent_users,
         'recent_activities': recent_activities,
+        'recent_orders': recent_orders,
     }
     return render(request, 'core/admin_dashboard.html', context)
 
@@ -183,6 +191,7 @@ def admin_user_detail(request, user_id):
     try:
         user = User.objects.get(id=user_id)
         user_activities = ActivityLog.objects.filter(user=user)[:20]
+        user_orders = Order.objects.filter(user=user).order_by('-created_at')
     except User.DoesNotExist:
         messages.error(request, 'User not found.')
         return redirect('admin_users')
@@ -191,6 +200,7 @@ def admin_user_detail(request, user_id):
         'title': f'User Details: {user.username}',
         'view_user': user,
         'user_activities': user_activities,
+        'user_orders': user_orders,
     }
     return render(request, 'core/admin_user_detail.html', context)
 
@@ -274,21 +284,26 @@ def view_cart(request):
         try:
             items = json.loads(cart.items)
             for item in items:
-                if isinstance(item, dict):
-                    product = Product.objects.get(id=item['product_id'])
-                    item_total = float(str(product.price)) * item['quantity']
-                    total += item_total
-                    cart_items.append({
-                        'product': product,
-                        'quantity': item['quantity'],
-                        'item_total': item_total
-                    })
-        except (json.JSONDecodeError, Product.DoesNotExist):
+                if isinstance(item, dict) and 'product_id' in item:
+                    try:
+                        product = Product.objects.get(id=item['product_id'])
+                        price = float(str(product.price))
+                        item_total = price * item['quantity']
+                        total += item_total
+                        cart_items.append({
+                            'product': product,
+                            'quantity': item['quantity'],
+                            'item_total': item_total
+                        })
+                    except Product.DoesNotExist:
+                        continue
+        except (json.JSONDecodeError, ValueError):
             pass
     
     context = {
         'cart_items': cart_items,
-        'total': total
+        'total': total,
+        'cart': cart
     }
     return render(request, 'core/cart.html', context)
 
@@ -344,7 +359,7 @@ def update_cart_quantity(request, product_id):
 
 @login_required
 def checkout(request):
-    """Checkout and create order"""
+    """Checkout page - enter delivery information"""
     try:
         cart = Cart.objects.get(user=request.user)
         
@@ -362,48 +377,112 @@ def checkout(request):
             messages.error(request, "Your cart is empty.")
             return redirect('product_list')
         
-        # Izračunaj total i pripremi order items
+        # Izračunaj total za prikaz
         total_price = 0
-        order_items = []
-        
+        cart_items = []
         for item in items:
             try:
                 product = Product.objects.get(id=item['product_id'])
-                # Konvertuj cenu preko stringa (rešava Decimal128 problem)
                 price = float(str(product.price))
                 item_total = price * item['quantity']
                 total_price += item_total
-                
-                order_items.append({
-                    'product_id': product.id,
-                    'product_name': product.name,
+                cart_items.append({
+                    'product': product,
                     'quantity': item['quantity'],
-                    'price_at_purchase': price,  # Čuvamo kao float
-                    'total': float(item_total)
+                    'price': price,
+                    'total': item_total
                 })
-            except (Product.DoesNotExist, ValueError, KeyError) as e:
-                print(f"Error processing item: {e}")
+            except (Product.DoesNotExist, ValueError):
                 continue
         
-        if order_items:
-            # Kreiraj order
-            Order.objects.create(
-                user=request.user,
-                items=json.dumps(order_items),  # Sačuvaj kao JSON string
-                total_price=total_price,
-                status='Pending'
-            )
-            
-            # Očisti korpu
-            cart.items = json.dumps([])
-            cart.save()
-            
-            messages.success(request, "Order placed successfully!")
-            return redirect('dashboard')
+        if request.method == 'POST':
+            form = CheckoutForm(request.POST)
+            if form.is_valid():
+                # Pripremi order items za čuvanje
+                order_items = []
+                for item in items:
+                    try:
+                        product = Product.objects.get(id=item['product_id'])
+                        price = float(str(product.price))
+                        order_items.append({
+                            'product_id': product.id,
+                            'product_name': product.name,
+                            'quantity': item['quantity'],
+                            'price_at_purchase': price,
+                            'total': price * item['quantity']
+                        })
+                    except Product.DoesNotExist:
+                        continue
+                
+                if order_items:
+                    # Kreiraj order sa podacima iz forme
+                    order = Order.objects.create(
+                        user=request.user,
+                        items=json.dumps(order_items),
+                        total_price=total_price,
+                        status='Pending',
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
+                        phone_number=form.cleaned_data['phone_number'],
+                        delivery_address=form.cleaned_data['delivery_address'],
+                        delivery_city=form.cleaned_data['delivery_city'],
+                        delivery_zip=form.cleaned_data['delivery_zip'],
+                        delivery_country=form.cleaned_data['delivery_country'],
+                        delivery_notes=form.cleaned_data.get('delivery_notes', '')
+                    )
+                    
+                    # Sačuvaj podatke u user profil ako je označeno
+                    if form.cleaned_data.get('save_info'):
+                        user = request.user
+                        user.first_name = form.cleaned_data['first_name']
+                        user.last_name = form.cleaned_data['last_name']
+                        user.phone_number = form.cleaned_data['phone_number']
+                        user.address = form.cleaned_data['delivery_address']
+                        user.save()
+                    
+                    # Očisti korpu
+                    cart.items = json.dumps([])
+                    cart.save()
+                    
+                    messages.success(request, f"Order #{order.id} placed successfully!")
+                    return redirect('order_confirmation', order_id=order.id)
+                else:
+                    messages.error(request, "No valid items in cart.")
         else:
-            messages.error(request, "No valid items in cart.")
-            return redirect('view_cart')
+            # Pre-popuni formu sa podacima iz user profila
+            initial_data = {
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+                'phone_number': request.user.phone_number,
+                'email': request.user.email,
+                'delivery_address': request.user.address,
+                'delivery_country': 'Serbia',
+            }
+            form = CheckoutForm(initial=initial_data)
+        
+        context = {
+            'form': form,
+            'cart_items': cart_items,
+            'total': total_price,
+        }
+        return render(request, 'core/checkout.html', context)
             
     except Cart.DoesNotExist:
         messages.error(request, "Cart not found.")
         return redirect('product_list')
+
+@login_required
+def order_confirmation(request, order_id):
+    """Order confirmation page"""
+    try:
+        order = Order.objects.get(id=order_id, user=request.user)
+        order_items = json.loads(order.items) if order.items else []
+        
+        context = {
+            'order': order,
+            'order_items': order_items,
+        }
+        return render(request, 'core/order_confirmation.html', context)
+    except Order.DoesNotExist:
+        messages.error(request, "Order not found.")
+        return redirect('dashboard')

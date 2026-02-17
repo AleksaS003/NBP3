@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="alert alert-success">
+        <h4 class="alert-heading">Order Placed Successfully!</h4>
+        <p>Thank you for your order. Your order number is <strong>#{{ order.id }}</strong>.</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Delivery Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ order.full_name }}</p>
+                    <p><strong>Phone:</strong> {{ order.phone_number }}</p>
+                    <p><strong>Address:</strong> {{ order.full_address }}</p>
+                    {% if order.delivery_notes %}
+                        <p><strong>Notes:</strong> {{ order.delivery_notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in order_items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ item.product_name }} x {{ item.quantity }}</span>
+                            <span>${{ item.total }}</span>
+                        </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <strong>${{ order.total_price }}</strong>
+                    </div>
+                    <hr>
+                    <p><strong>Status:</strong> <span class="badge bg-warning">{{ order.status }}</span></p>
+                    <p><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-3">
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+        <a href="{% url 'product_list' %}" class="btn btn-secondary">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

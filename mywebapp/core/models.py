@@ -100,11 +100,33 @@ class Product(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    # PROMENA: Umesto JSONField koristimo TextField
     items = models.TextField(default='[]')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=50, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    delivery_address = models.TextField(blank=True)
+    delivery_city = models.CharField(max_length=100, blank=True)
+    delivery_zip = models.CharField(max_length=20, blank=True)
+    delivery_country = models.CharField(max_length=100, blank=True, default='Serbia')
+class Order(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    items = models.TextField(default='[]')
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    delivery_address = models.TextField(blank=True)
+    delivery_city = models.CharField(max_length=100, blank=True)
+    delivery_zip = models.CharField(max_length=20, blank=True)
+    delivery_country = models.CharField(max_length=100, blank=True, default='Serbia')
+    delivery_notes = models.TextField(blank=True, help_text="Additional delivery instructions")
 
     class Meta:
         db_table = 'orders'
@@ -112,8 +134,16 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
     
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+    
+    @property
+    def full_address(self):
+        parts = [self.delivery_address, self.delivery_city, self.delivery_zip, self.delivery_country]
+        return ", ".join([p for p in parts if p])
+    
     def set_items(self, items_list):
-        """Čuva listu kao JSON string"""
         if isinstance(items_list, list):
             self.items = json.dumps(items_list)
         elif isinstance(items_list, str):
