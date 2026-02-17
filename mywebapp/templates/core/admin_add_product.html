@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Product{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Add New Product</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Product Information</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Product Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label">Price *</label>
+                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="stock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" id="stock" name="stock" value="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Kategorija - postojeće -->
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category *</label>
+                            <select class="form-control" id="category" name="category">
+                                <option value="">-- Select existing category --</option>
+                                {% for cat in existing_categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Or add a new category below</small>
+                        </div>
+                        
+                        <!-- Nova kategorija -->
+                        <div class="mb-3">
+                            <label for="new_category" class="form-label">New Category</label>
+                            <input type="text" class="form-control" id="new_category" name="new_category" 
+                                   placeholder="Enter new category if not in list">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="image_url" class="form-label">Image URL</label>
+                            <input type="url" class="form-control" id="image_url" name="image_url">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="specifications" class="form-label">Specifications (JSON format)</label>
+                            <textarea class="form-control" id="specifications" name="specifications" rows="3">{{ '{}' }}</textarea>
+                            <small class="text-muted">
+                                Example: {"color": "silver", "ram": "8GB", "storage": "256GB"}
+                            </small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Create Product</button>
+                        <a href="{% url 'product_list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>✓ Required fields are marked with *</li>
+                        <li>✓ Select existing category or create new one</li>
+                        <li>✓ Specifications must be valid JSON</li>
+                        <li>✓ Image URL should be publicly accessible</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6>Existing Categories:</h6>
+                    <div class="category-list">
+                        {% for cat in existing_categories %}
+                            <span class="badge bg-info mb-1 p-2">{{ cat }}</span>
+                        {% empty %}
+                            <p class="text-muted">No categories yet</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .category-list .badge {
+        margin-right: 5px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}

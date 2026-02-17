@@ -3,6 +3,16 @@
 {% block title %}{{ title }} - My Web App{% endblock %}
 
 {% block content %}
+
+
+<div class="category-filter">
+    <h5>Categories</h5>
+    <ul>
+        {% for cat in categories %}
+            <li><a href="?category={{ cat }}">{{ cat }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
     <div>
         <h1>All Products</h1>
         <p>Browse our available items below.</p>

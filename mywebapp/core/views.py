@@ -6,6 +6,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, CheckoutForm
 from .models import Cart, Order, User, ActivityLog, UserProfile, Product
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Public views
 def home(request):
@@ -206,11 +207,17 @@ def admin_user_detail(request, user_id):
 
 # Product views
 def product_list(request):
-    """List all products"""
     products = Product.objects.all()
+    category = request.GET.get('category')
+    if category:
+        products = products.filter(category=category)
+    
+    categories = Product.objects.values_list('category', flat=True).distinct()
+    
     context = {
         'title': 'Shop',
         'products': products,
+        'categories': sorted([c for c in categories if c]),
     }
     return render(request, 'core/product_list.html', context)
 
@@ -227,6 +234,64 @@ def product_detail(request, product_id):
         'product': product,
     }
     return render(request, 'core/product_detail.html', context)
+
+@staff_member_required
+def admin_add_product(request):
+    """Admin view for adding new products with dynamic category selection"""
+    # Dohvati sve postojeće kategorije iz baze
+    existing_categories = Product.objects.values_list('category', flat=True).distinct()
+    # Ukloni None i prazne stringove, sortiraj
+    existing_categories = sorted([cat for cat in existing_categories if cat])
+    
+    if request.method == 'POST':
+        # Prikupi podatke iz forme
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        price = request.POST.get('price')
+        category = request.POST.get('category')
+        new_category = request.POST.get('new_category', '').strip()
+        stock = request.POST.get('stock', 0)
+        image_url = request.POST.get('image_url', '')
+        specifications = request.POST.get('specifications', '{}')
+        
+        # Ako je uneta nova kategorija, koristi nju
+        if new_category:
+            category = new_category
+        
+        # Validacija
+        errors = []
+        if not name:
+            errors.append("Product name is required.")
+        if not price:
+            errors.append("Price is required.")
+        if not category:
+            errors.append("Category is required.")
+        
+        if not errors:
+            try:
+                # Kreiraj novi proizvod
+                product = Product.objects.create(
+                    name=name,
+                    description=description,
+                    price=price,
+                    category=category,
+                    stock=int(stock) if stock else 0,
+                    image_url=image_url,
+                    specifications=specifications
+                )
+                messages.success(request, f'Product "{product.name}" created successfully!')
+                return redirect('product_list')
+            except Exception as e:
+                messages.error(request, f'Error creating product: {str(e)}')
+        else:
+            for error in errors:
+                messages.error(request, error)
+    
+    context = {
+        'title': 'Add New Product',
+        'existing_categories': existing_categories,
+    }
+    return render(request, 'core/admin_add_product.html', context)
 
 # Cart views
 @login_required
