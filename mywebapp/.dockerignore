@@ -1,0 +1,16 @@
+# .dockerignore
+venv/
+env/
+.env.local
+.git/
+.gitignore
+README.md
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/

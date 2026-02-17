@@ -1,0 +1,44 @@
+services:
+  mongodb:
+    image: mongo:5.0
+    container_name: mywebapp_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=mywebapp_db
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - mywebapp_network
+    command: mongod --bind_ip_all
+
+  web:
+    build: .
+    container_name: mywebapp_django
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    environment:
+      - DJANGO_SETTINGS_MODULE=mywebapp.settings
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - MONGODB_URI=mongodb://mongodb:27017/
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    networks:
+      - mywebapp_network
+
+volumes:
+  mongodb_data:
+  mongodb_config:
+  static_volume:
+
+networks:
+  mywebapp_network:
+    driver: bridge

@@ -51,14 +51,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mywebapp.wsgi.application'
 
-# MongoDB Configuration with Djongo
+
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'NAME': 'mywebapp_db',
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
-            'host': 'mongodb://localhost:27017/',
+            'host': os.getenv('MONGODB_URI', 'mongodb://localhost:27017/'),
         }
     }
 }
@@ -79,12 +79,16 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+import os
+
+# Static files
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# This is important - Djongo handles this automatically
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
-
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'home'
+# Only add STATICFILES_DIRS if the directory exists
+static_dir = BASE_DIR / 'static'
+if static_dir.exists():
+    STATICFILES_DIRS = [static_dir]
+else:
+    STATICFILES_DIRS = []
+    print(f"Warning: Static directory {static_dir} does not exist. Create it or add static files.")
