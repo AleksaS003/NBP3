@@ -207,17 +207,89 @@ def admin_user_detail(request, user_id):
 
 # Product views
 def product_list(request):
+    """List all products with advanced filtering"""
     products = Product.objects.all()
+    
+    # Osnovni filteri
     category = request.GET.get('category')
     if category:
         products = products.filter(category=category)
     
+    # Filter po ceni (opseg)
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    
+    if min_price:
+        try:
+            min_price_float = float(min_price)
+            # Moraš da konvertuješ cenu za poređenje
+            all_products = []
+            for p in products:
+                if float(str(p.price)) >= min_price_float:
+                    all_products.append(p.id)
+            products = products.filter(id__in=all_products)
+        except ValueError:
+            pass
+    
+    if max_price:
+        try:
+            max_price_float = float(max_price)
+            all_products = []
+            for p in products:
+                if float(str(p.price)) <= max_price_float:
+                    all_products.append(p.id)
+            products = products.filter(id__in=all_products)
+        except ValueError:
+            pass
+    
+    # Filter po specifikacijama (JSON polje)
+    # Npr. ?ram=8GB&color=silver&storage=256GB
+    spec_filters = {}
+    for key, value in request.GET.items():
+        if key.startswith('spec_'):
+            spec_key = key[5:]  # ukloni 'spec_' prefiks
+            spec_filters[spec_key] = value
+    
+    if spec_filters:
+        # Filtriranje po JSON polju - moramo ručno jer je JSON string
+        filtered_products = []
+        for product in products:
+            specs = product.get_specifications()
+            match = True
+            for key, value in spec_filters.items():
+                if key in specs and str(specs[key]) != value:
+                    match = False
+                    break
+            if match:
+                filtered_products.append(product.id)
+        products = products.filter(id__in=filtered_products)
+    
+    # Dohvati sve kategorije za dropdown
     categories = Product.objects.values_list('category', flat=True).distinct()
+    categories = sorted([c for c in categories if c])
+    
+    # Dohvati sve dostupne specifikacije za filtere
+    all_specs = {}
+    for product in Product.objects.all():
+        specs = product.get_specifications()
+        for key, value in specs.items():
+            if key not in all_specs:
+                all_specs[key] = set()
+            all_specs[key].add(str(value))
+    
+    # Konvertuj setove u liste i sortiraj
+    for key in all_specs:
+        all_specs[key] = sorted(list(all_specs[key]))
     
     context = {
         'title': 'Shop',
         'products': products,
-        'categories': sorted([c for c in categories if c]),
+        'categories': categories,
+        'all_specs': all_specs,
+        'selected_category': category,
+        'min_price': min_price,
+        'max_price': max_price,
+        'selected_specs': spec_filters,
     }
     return render(request, 'core/product_list.html', context)
 

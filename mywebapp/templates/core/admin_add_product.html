@@ -65,9 +65,22 @@
                             <label for="specifications" class="form-label">Specifications (JSON format)</label>
                             <textarea class="form-control" id="specifications" name="specifications" rows="3">{{ '{}' }}</textarea>
                             <small class="text-muted">
-                                Example: {"color": "silver", "ram": "8GB", "storage": "256GB"}
+                                Example: {"color": "silver", "ram": "8GB", "storage": "256GB", "processor": "M1"}
                             </small>
+                            <div id="json-error" class="text-danger" style="display:none;">Invalid JSON format</div>
                         </div>
+
+                        <script>
+                        document.querySelector('form').addEventListener('submit', function(e) {
+                            const specs = document.getElementById('specifications').value;
+                            try {
+                                JSON.parse(specs);
+                            } catch (error) {
+                                e.preventDefault();
+                                document.getElementById('json-error').style.display = 'block';
+                            }
+                        });
+                        </script>
                         
                         <button type="submit" class="btn btn-primary">Create Product</button>
                         <a href="{% url 'product_list' %}" class="btn btn-secondary">Cancel</a>
