@@ -1,25 +1,47 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - My Web App{% endblock %}
+{% block title %}{{ title }} - Shongo{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>About Us</h1>
-        <p>Welcome to My Web App! We are dedicated to providing a simple and effective web application solution using modern technologies.</p>
-        
+
+<article>
+    <header>
+        <hgroup>
+            <h1>About Us</h1>
+            <h2>Learn more about our application</h2>
+        </hgroup>
+    </header>
+
+    <section>
+        <p>
+            Welcome! We are dedicated to providing a simple and effective web application solution using modern technologies.
+        </p>
+    </section>
+
+    <section>
         <h2>Our Technology Stack</h2>
         <ul>
             <li><strong>Backend:</strong> Django (Python)</li>
             <li><strong>Database:</strong> MongoDB with Djongo</li>
-            <li><strong>Frontend:</strong> HTML (CSS will be added later)</li>
+            <li><strong>Frontend:</strong> HTML (pico CSS)</li>
         </ul>
-        
+    </section>
+
+    <section>
         <h2>Our Mission</h2>
-        <p>To demonstrate a clean MVC architecture with Django and MongoDB while providing a functional user management system.</p>
-        
+        <p>
+            To demonstrate a clean MVC architecture with Django and MongoDB while providing a functional user management system.
+        </p>
+    </section>
+
+    <section>
         <h2>Contact Information</h2>
-        <p>Email: info@mywebapp.com</p>
-        <p>Phone: +1 (555) 123-4567</p>
-        <p>Address: 123 Web Dev Street, Internet City, 12345</p>
-    </div>
+        <address>
+            <p>Email: info@shongo.com</p>
+            <p>Phone: +1 (555) 123-4567</p>
+            <p>Address: 123 Web Dev Street, Internet City, 12345</p>
+        </address>
+    </section>
+</article>
+
 {% endblock %}

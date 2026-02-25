@@ -1,60 +1,65 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Web App{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'pico.min.css' %}">
+    <title>{% block title %}Shongo{% endblock %}</title>
 </head>
 <body>
-    <header>
-        <nav>
-            <div>
-                <a href="{% url 'home' %}">MyWebApp</a>
-                <ul>
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="{% url 'about' %}">About</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li>
-                    <li><a href="{% url 'product_list' %}">Shop</a></li>
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'view_cart' %}">My Cart</a></li>
-                    {% endif %}
-                    {% if user.is_authenticated %}
-                        {% if user.is_staff %}
-                        <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
-                        <li><a href="{% url 'admin_add_product' %}">Add Product</a></li>
-{% endif %}
-                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                        <li><a href="{% url 'profile' %}">Profile</a></li>
-                        <li>
-                            <form method="post" action="{% url 'logout' %}">
-                                {% csrf_token %}
-                                <button type="submit">Logout</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li><a href="{% url 'login' %}">Login</a></li>
-                        <li><a href="{% url 'register' %}">Register</a></li>
-                    {% endif %}
-                </ul>
+
+<header class="container">
+    <nav>
+        <ul>
+            <li><strong><a href="{% url 'home' %}">Shongo</a></strong></li>
+        </ul>
+        <ul>
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'about' %}">About</a></li>
+            <li><a href="{% url 'contact' %}">Contact</a></li>
+            <li><a href="{% url 'product_list' %}">Shop</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'view_cart' %}">My Cart</a></li>
+            {% endif %}
+            {% if user.is_authenticated %}
+                {% if user.is_staff %}
+                    <li><a href="{% url 'admin_dashboard' %}">Admin Dashboard</a></li>
+                    <li><a href="{% url 'admin_add_product' %}">Add Product</a></li>
+                {% endif %}
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'profile' %}">Profile</a></li>
+                <li>
+                    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="secondary">Logout</button>
+                    </form>
+                </li>
+            {% else %}
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'register' %}">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>
+
+<main class="container">
+    {% if messages %}
+        {% for message in messages %}
+            <div role="alert">
+                {{ message }}
             </div>
-        </nav>
-    </header>
+        {% endfor %}
+    {% endif %}
 
-    <main>
-        {% if messages %}
-            <div>
-                {% for message in messages %}
-                    <div>{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
+    {% block content %}
+    {% endblock %}
+</main>
 
-        {% block content %}
-        {% endblock %}
-    </main>
+<footer class="container">
+    <hr>
+    <p>&copy; 2026 Shongo. All rights reserved.</p>
+</footer>
 
-    <footer>
-        <p>&copy; 2024 My Web App. All rights reserved.</p>
-    </footer>
 </body>
 </html>

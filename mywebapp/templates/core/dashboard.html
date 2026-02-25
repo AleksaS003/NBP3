@@ -1,65 +1,74 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - My Web App{% endblock %}
+{% block title %}{{ title }} - Shongo{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>Welcome to Your Dashboard, {{ user.username }}!</h1>
-        
-        <div>
-            <h2>Quick Actions</h2>
-            <ul>
-                <li><a href="{% url 'profile' %}">View Profile</a></li>
-                <li><a href="{% url 'profile_edit' %}">Edit Profile</a></li>
-            </ul>
+<article>
+    <header>
+        <hgroup>
+            <h1>Welcome to Your Dashboard, {{ user.username }}!</h1>
+            <h2>Your account overview</h2>
+        </hgroup>
+    </header>
+    
+    <section>
+        <h2>Quick Actions</h2>
+        <div class="grid">
+            <a href="{% url 'profile' %}" role="button" class="secondary">View Profile</a>
+            <a href="{% url 'profile_edit' %}" role="button">Edit Profile</a>
         </div>
-        
-        <div>
-            <h2>Your Information</h2>
+    </section>
+    
+    <section>
+        <h2>Your Information</h2>
+        <figure>
             <table>
-                <tr>
-                    <th>Username:</th>
-                    <td>{{ user.username }}</td>
-                </tr>
-                <tr>
-                    <th>Email:</th>
-                    <td>{{ user.email|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Phone Number:</th>
-                    <td>{{ user.phone_number|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Address:</th>
-                    <td>{{ user.address|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Member Since:</th>
-                    <td>{{ user.date_joined|date:"F j, Y" }}</td>
-                </tr>
-                <tr>
-                    <th>Last Login:</th>
-                    <td>{{ user.last_login|date:"F j, Y H:i" }}</td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <th>Username:</th>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ user.email|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone Number:</th>
+                        <td>{{ user.phone_number|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address:</th>
+                        <td>{{ user.address|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Member Since:</th>
+                        <td>{{ user.date_joined|date:"F j, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Login:</th>
+                        <td>{{ user.last_login|date:"F j, Y H:i" }}</td>
+                    </tr>
+                </tbody>
             </table>
-        </div>
-        
-        <div>
-            <h2>Recent Activity</h2>
-            {% if recent_activities %}
-                <ul>
-                    {% for activity in recent_activities %}
-                        <li>
-                            {{ activity.action }} - {{ activity.timestamp|date:"F j, Y H:i" }}
-                            {% if activity.details %}
-                                ({{ activity.details }})
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No recent activity.</p>
-            {% endif %}
-        </div>
-    </div>
+        </figure>
+    </section>
+    
+    <section>
+        <h2>Recent Activity</h2>
+        {% if recent_activities %}
+            <ul>
+                {% for activity in recent_activities %}
+                    <li>
+                        {{ activity.action }} - {{ activity.timestamp|date:"F j, Y H:i" }}
+                        {% if activity.details %}
+                            ({{ activity.details }})
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No recent activity.</p>
+        {% endif %}
+    </section>
+</article>
 {% endblock %}

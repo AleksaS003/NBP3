@@ -1,17 +1,22 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - My Web App{% endblock %}
+{% block title %}{{ title }} - Shongo{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>Create an Account</h1>
-        <p>Join our community today!</p>
-        
+<article>
+    <header>
+        <hgroup>
+            <h1>Create an Account</h1>
+            <h2>Join our community today!</h2>
+        </hgroup>
+    </header>
+    
+    <section>
         <form method="post">
             {% csrf_token %}
             
             {% if form.errors %}
-                <div>
+                <div role="alert">
                     <strong>Please correct the following errors:</strong>
                     <ul>
                         {% for field in form %}
@@ -26,42 +31,36 @@
                 </div>
             {% endif %}
             
-            <div>
-                <label for="id_username">Username:</label>
-                {{ form.username }}
-                <small>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small>
-            </div>
+            <label for="id_username">Username:</label>
+            {{ form.username }}
+            <small>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</small>
             
-            <div>
-                <label for="id_email">Email:</label>
-                {{ form.email }}
-            </div>
+            <label for="id_email">Email:</label>
+            {{ form.email }}
             
-            <div>
-                <label for="id_phone_number">Phone Number:</label>
-                {{ form.phone_number }}
-            </div>
+            <label for="id_phone_number">Phone Number:</label>
+            {{ form.phone_number }}
             
-            <div>
-                <label for="id_address">Address:</label>
-                {{ form.address }}
-            </div>
+            <label for="id_address">Address:</label>
+            {{ form.address }}
             
-            <div>
-                <label for="id_password1">Password:</label>
-                {{ form.password1 }}
-                <small>Your password must contain at least 8 characters and can't be entirely numeric.</small>
-            </div>
+            <label for="id_password1">Password:</label>
+            {{ form.password1 }}
+            <small>Your password must contain at least 8 characters and can't be entirely numeric.</small>
             
-            <div>
-                <label for="id_password2">Confirm Password:</label>
-                {{ form.password2 }}
-                <small>Enter the same password as before, for verification.</small>
-            </div>
+            <label for="id_password2">Confirm Password:</label>
+            {{ form.password2 }}
+            <small>Enter the same password as before, for verification.</small>
             
             <button type="submit">Register</button>
         </form>
-        
-        <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
-    </div>
+    </section>
+    
+    <footer>
+        <p>
+            Already have an account?
+            <a href="{% url 'login' %}">Login here</a>
+        </p>
+    </footer>
+</article>
 {% endblock %}

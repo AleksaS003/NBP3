@@ -1,54 +1,69 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }} - My Web App{% endblock %}
+{% block title %}{{ title }} - Shongo{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>My Profile</h1>
-        
-        <div>
-            <h2>Account Information</h2>
+<article>
+    <header>
+        <hgroup>
+            <h1>My Profile</h1>
+            <h2>Account Overview</h2>
+        </hgroup>
+    </header>
+    
+    <section>
+        <h2>Account Information</h2>
+        <figure>
             <table>
-                <tr>
-                    <th>Username:</th>
-                    <td>{{ user.username }}</td>
-                </tr>
-                <tr>
-                    <th>Email:</th>
-                    <td>{{ user.email|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Phone Number:</th>
-                    <td>{{ user.phone_number|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Address:</th>
-                    <td>{{ user.address|default:"Not provided" }}</td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <th>Username:</th>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ user.email|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone Number:</th>
+                        <td>{{ user.phone_number|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address:</th>
+                        <td>{{ user.address|default:"Not provided" }}</td>
+                    </tr>
+                </tbody>
             </table>
-        </div>
-        
-        <div>
-            <h2>Profile Information</h2>
-            {% if form %}
+        </figure>
+    </section>
+    
+    <section>
+        <h2>Profile Information</h2>
+        {% if form %}
+            <figure>
                 <table>
-                    <tr>
-                        <th>Bio:</th>
-                        <td>{{ form.bio.value|default:"Not provided" }}</td>
-                    </tr>
-                    <tr>
-                        <th>Date of Birth:</th>
-                        <td>{{ form.date_of_birth.value|default:"Not provided" }}</td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <th>Bio:</th>
+                            <td>{{ form.bio.value|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Date of Birth:</th>
+                            <td>{{ form.date_of_birth.value|default:"Not provided" }}</td>
+                        </tr>
+                    </tbody>
                 </table>
-            {% else %}
-                <p>No additional profile information available.</p>
-            {% endif %}
+            </figure>
+        {% else %}
+            <p>No additional profile information available.</p>
+        {% endif %}
+    </section>
+    
+    <footer>
+        <div class="grid">
+            <a href="{% url 'profile_edit' %}" role="button">Edit Profile</a>
+            <a href="{% url 'dashboard' %}" role="button" class="secondary">Back to Dashboard</a>
         </div>
-        
-        <div>
-            <a href="{% url 'profile_edit' %}">Edit Profile</a>
-            <a href="{% url 'dashboard' %}">Back to Dashboard</a>
-        </div>
-    </div>
+    </footer>
+</article>
 {% endblock %}

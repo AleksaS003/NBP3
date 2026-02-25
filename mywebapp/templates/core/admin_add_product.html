@@ -3,125 +3,112 @@
 {% block title %}Add New Product{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Add New Product</h1>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Product Information</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Product Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="4"></textarea>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="price" class="form-label">Price *</label>
-                                <input type="number" step="0.01" class="form-control" id="price" name="price" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="stock" class="form-label">Stock</label>
-                                <input type="number" class="form-control" id="stock" name="stock" value="0">
-                            </div>
-                        </div>
-                        
-                        <!-- Kategorija - postojeće -->
-                        <div class="mb-3">
-                            <label for="category" class="form-label">Category *</label>
-                            <select class="form-control" id="category" name="category">
-                                <option value="">-- Select existing category --</option>
-                                {% for cat in existing_categories %}
-                                    <option value="{{ cat }}">{{ cat }}</option>
-                                {% endfor %}
-                            </select>
-                            <small class="text-muted">Or add a new category below</small>
-                        </div>
-                        
-                        <!-- Nova kategorija -->
-                        <div class="mb-3">
-                            <label for="new_category" class="form-label">New Category</label>
-                            <input type="text" class="form-control" id="new_category" name="new_category" 
-                                   placeholder="Enter new category if not in list">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="image_url" class="form-label">Image URL</label>
-                            <input type="url" class="form-control" id="image_url" name="image_url">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="specifications" class="form-label">Specifications (JSON format)</label>
-                            <textarea class="form-control" id="specifications" name="specifications" rows="3">{{ '{}' }}</textarea>
-                            <small class="text-muted">
-                                Example: {"color": "silver", "ram": "8GB", "storage": "256GB", "processor": "M1"}
-                            </small>
-                            <div id="json-error" class="text-danger" style="display:none;">Invalid JSON format</div>
-                        </div>
+<article>
+    <header>
+        <hgroup>
+            <h1>Add New Product</h1>
+            <h2>Product Information</h2>
+        </hgroup>
+    </header>
 
-                        <script>
-                        document.querySelector('form').addEventListener('submit', function(e) {
-                            const specs = document.getElementById('specifications').value;
-                            try {
-                                JSON.parse(specs);
-                            } catch (error) {
-                                e.preventDefault();
-                                document.getElementById('json-error').style.display = 'block';
-                            }
-                        });
-                        </script>
-                        
-                        <button type="submit" class="btn btn-primary">Create Product</button>
-                        <a href="{% url 'product_list' %}" class="btn btn-secondary">Cancel</a>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Tips</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li>✓ Required fields are marked with *</li>
-                        <li>✓ Select existing category or create new one</li>
-                        <li>✓ Specifications must be valid JSON</li>
-                        <li>✓ Image URL should be publicly accessible</li>
-                    </ul>
-                    
-                    <hr>
-                    
-                    <h6>Existing Categories:</h6>
-                    <div class="category-list">
-                        {% for cat in existing_categories %}
-                            <span class="badge bg-info mb-1 p-2">{{ cat }}</span>
-                        {% empty %}
-                            <p class="text-muted">No categories yet</p>
-                        {% endfor %}
+    <div class="grid">
+        <section>
+            <form method="post">
+                {% csrf_token %}
+                
+                <label for="name">Product Name *</label>
+                <input type="text" id="name" name="name" required>
+                
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="4"></textarea>
+                
+                <div class="grid">
+                    <div>
+                        <label for="price">Price *</label>
+                        <input type="number" step="0.01" id="price" name="price" required>
+                    </div>
+                    <div>
+                        <label for="stock">Stock</label>
+                        <input type="number" id="stock" name="stock" value="0">
                     </div>
                 </div>
-            </div>
-        </div>
+                
+                <!-- Kategorija - postojeće -->
+                <label for="category">Category *</label>
+                <select id="category" name="category">
+                    <option value="">-- Select existing category --</option>
+                    {% for cat in existing_categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <small>Or add a new category below</small>
+                
+                <!-- Nova kategorija -->
+                <label for="new_category">New Category</label>
+                <input type="text" id="new_category" name="new_category"
+                       placeholder="Enter new category if not in list">
+                
+                <label for="image_url">Image URL</label>
+                <input type="url" id="image_url" name="image_url">
+                
+                <label for="specifications">Specifications (JSON format)</label>
+                <textarea id="specifications" name="specifications" rows="3">{{ '{}' }}</textarea>
+                <small>
+                    Example: {"color": "silver", "ram": "8GB", "storage": "256GB", "processor": "M1"}
+                </small>
+                <div id="json-error" role="alert" style="display:none;">Invalid JSON format</div>
+
+                <script>
+                document.querySelector('form').addEventListener('submit', function(e) {
+                    const specs = document.getElementById('specifications').value;
+                    try {
+                        JSON.parse(specs);
+                    } catch (error) {
+                        e.preventDefault();
+                        document.getElementById('json-error').style.display = 'block';
+                    }
+                });
+                </script>
+                
+                <div class="grid">
+                    <button type="submit">Create Product</button>
+                    <a href="{% url 'product_list' %}" role="button" class="secondary">Cancel</a>
+                </div>
+            </form>
+        </section>
+        
+        <aside>
+            <article>
+                <header>
+                    <h3>Tips</h3>
+                </header>
+
+                <ul>
+                    <li>✓ Required fields are marked with *</li>
+                    <li>✓ Select existing category or create new one</li>
+                    <li>✓ Specifications must be valid JSON</li>
+                    <li>✓ Image URL should be publicly accessible</li>
+                </ul>
+                
+                <hr>
+                
+                <h4>Existing Categories:</h4>
+                <div class="category-list">
+                    {% for cat in existing_categories %}
+                        <button type="button" class="secondary outline">{{ cat }}</button>
+                    {% empty %}
+                        <p>No categories yet</p>
+                    {% endfor %}
+                </div>
+            </article>
+        </aside>
     </div>
-</div>
+</article>
 
 <style>
-    .category-list .badge {
+    .category-list button {
         margin-right: 5px;
-        font-size: 14px;
+        margin-bottom: 5px;
     }
 </style>
 {% endblock %}

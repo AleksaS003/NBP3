@@ -3,57 +3,63 @@
 {% block title %}Order Confirmation{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="alert alert-success">
-        <h4 class="alert-heading">Order Placed Successfully!</h4>
+<article>
+    <header>
+        <hgroup>
+            <h1>Order Placed Successfully!</h1>
+            <h2>Order #{{ order.id }}</h2>
+        </hgroup>
         <p>Thank you for your order. Your order number is <strong>#{{ order.id }}</strong>.</p>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Delivery Information</h5>
-                </div>
-                <div class="card-body">
-                    <p><strong>Name:</strong> {{ order.full_name }}</p>
-                    <p><strong>Phone:</strong> {{ order.phone_number }}</p>
-                    <p><strong>Address:</strong> {{ order.full_address }}</p>
-                    {% if order.delivery_notes %}
-                        <p><strong>Notes:</strong> {{ order.delivery_notes }}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    </header>
+
+    <div class="grid">
+        <section>
+            <article>
+                <header>
+                    <h3>Delivery Information</h3>
+                </header>
+                <p><strong>Name:</strong> {{ order.full_name }}</p>
+                <p><strong>Phone:</strong> {{ order.phone_number }}</p>
+                <p><strong>Address:</strong> {{ order.full_address }}</p>
+                {% if order.delivery_notes %}
+                    <p><strong>Notes:</strong> {{ order.delivery_notes }}</p>
+                {% endif %}
+            </article>
+        </section>
         
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Order Summary</h5>
-                </div>
-                <div class="card-body">
-                    {% for item in order_items %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{{ item.product_name }} x {{ item.quantity }}</span>
-                            <span>${{ item.total }}</span>
-                        </div>
-                    {% endfor %}
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Total:</strong>
-                        <strong>${{ order.total_price }}</strong>
+        <section>
+            <article>
+                <header>
+                    <h3>Order Summary</h3>
+                </header>
+
+                {% for item in order_items %}
+                    <div class="grid">
+                        <span>{{ item.product_name }} x {{ item.quantity }}</span>
+                        <span>${{ item.total }}</span>
                     </div>
-                    <hr>
-                    <p><strong>Status:</strong> <span class="badge bg-warning">{{ order.status }}</span></p>
-                    <p><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y H:i" }}</p>
+                {% endfor %}
+
+                <hr>
+
+                <div class="grid">
+                    <strong>Total:</strong>
+                    <strong>${{ order.total_price }}</strong>
                 </div>
-            </div>
+
+                <hr>
+
+                <p><strong>Status:</strong> <mark>{{ order.status }}</mark></p>
+                <p><strong>Order Date:</strong> {{ order.created_at|date:"F j, Y H:i" }}</p>
+            </article>
+        </section>
+    </div>
+
+    <footer>
+        <div class="grid">
+            <a href="{% url 'dashboard' %}" role="button">Go to Dashboard</a>
+            <a href="{% url 'product_list' %}" role="button" class="secondary">Continue Shopping</a>
         </div>
-    </div>
-    
-    <div class="text-center mt-3">
-        <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
-        <a href="{% url 'product_list' %}" class="btn btn-secondary">Continue Shopping</a>
-    </div>
-</div>
+    </footer>
+</article>
 {% endblock %}

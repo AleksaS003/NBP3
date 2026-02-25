@@ -3,120 +3,113 @@
 {% block title %}Shop{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Shop</h1>
-    
-    <div class="row">
+<article>
+    <header>
+        <hgroup>
+            <h1>Shop</h1>
+            <h2>Browse and filter products</h2>
+        </hgroup>
+    </header>
+
+    <div class="grid">
         <!-- Sidebar sa filterima -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Filter Products</h5>
-                </div>
-                <div class="card-body">
-                    <form method="get" id="filter-form">
-                        
-                        <!-- Kategorije -->
-                        <div class="mb-4">
-                            <h6>Categories</h6>
-                            <select name="category" class="form-control" onchange="this.form.submit()">
-                                <option value="">All Categories</option>
-                                {% for cat in categories %}
-                                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
-                                        {{ cat }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <!-- Filter po ceni -->
-                        <div class="mb-4">
-                            <h6>Price Range</h6>
-                            <div class="row">
-                                <div class="col-6">
-                                    <input type="number" name="min_price" class="form-control" 
-                                           placeholder="Min" value="{{ min_price }}" step="0.01">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" name="max_price" class="form-control" 
-                                           placeholder="Max" value="{{ max_price }}" step="0.01">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Filteri po specifikacijama -->
-                        {% for spec_name, spec_values in all_specs.items %}
-                            <div class="mb-4">
-                                <h6>{{ spec_name|title }}</h6>
-                                {% for value in spec_values %}
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               name="spec_{{ spec_name }}" value="{{ value }}"
-                                               id="spec_{{ spec_name }}_{{ forloop.counter }}"
-                                               {% if selected_specs.spec_name == value %}checked{% endif %}>
-                                        <label class="form-check-label" for="spec_{{ spec_name }}_{{ forloop.counter }}">
-                                            {{ value }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% empty %}
-                            <p class="text-muted">No specifications available</p>
+        <aside>
+            <article>
+                <header>
+                    <h3>Filter Products</h3>
+                </header>
+
+                <form method="get" id="filter-form">
+                    
+                    <!-- Kategorije -->
+                    <h4>Categories</h4>
+                    <select name="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                                {{ cat }}
+                            </option>
                         {% endfor %}
-                        
-                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                        <a href="{% url 'product_list' %}" class="btn btn-secondary w-100 mt-2">Clear Filters</a>
-                    </form>
-                </div>
-            </div>
-        </div>
+                    </select>
+                    
+                    <!-- Filter po ceni -->
+                    <h4>Price Range</h4>
+                    <div class="grid">
+                        <input type="number" name="min_price"
+                               placeholder="Min" value="{{ min_price }}" step="0.01">
+                        <input type="number" name="max_price"
+                               placeholder="Max" value="{{ max_price }}" step="0.01">
+                    </div>
+                    
+                    <!-- Filteri po specifikacijama -->
+                    {% for spec_name, spec_values in all_specs.items %}
+                        <h4>{{ spec_name|title }}</h4>
+                        {% for value in spec_values %}
+                            <label>
+                                <input type="checkbox"
+                                       name="spec_{{ spec_name }}" value="{{ value }}"
+                                       id="spec_{{ spec_name }}_{{ forloop.counter }}"
+                                       {% if selected_specs.spec_name == value %}checked{% endif %}>
+                                {{ value }}
+                            </label>
+                        {% endfor %}
+                    {% empty %}
+                        <p>No specifications available</p>
+                    {% endfor %}
+                    
+                    <div class="grid">
+                        <button type="submit">Apply Filters</button>
+                        <a href="{% url 'product_list' %}" role="button" class="secondary">Clear Filters</a>
+                    </div>
+                </form>
+            </article>
+        </aside>
         
         <!-- Lista proizvoda -->
-        <div class="col-md-9">
-            <div class="row">
+        <section>
+            <div class="grid">
                 {% for product in products %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            {% if product.image_url %}
-                                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                    <article>
+                        {% if product.image_url %}
+                            <figure>
+                                <img src="{{ product.image_url }}" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            </figure>
+                        {% endif %}
+
+                        <h3>{{ product.name }}</h3>
+                        <p><small>{{ product.category }}</small></p>
+                        <p>{{ product.description|truncatechars:100 }}</p>
+                        <p><strong>${{ product.price }}</strong></p>
+                        
+                        <!-- Pregled specifikacija -->
+                        {% with specs=product.get_specifications %}
+                            {% if specs %}
+                                <p>
+                                    {% for key, value in specs.items %}
+                                        <mark>{{ key }}: {{ value }}</mark>
+                                    {% endfor %}
+                                </p>
                             {% endif %}
-                            <div class="card-body">
-                                <h5 class="card-title">{{ product.name }}</h5>
-                                <p class="card-text text-muted">{{ product.category }}</p>
-                                <p class="card-text">{{ product.description|truncatechars:100 }}</p>
-                                <p class="card-text"><strong>${{ product.price }}</strong></p>
-                                
-                                <!-- Pregled specifikacija -->
-                                {% with specs=product.get_specifications %}
-                                    {% if specs %}
-                                        <div class="small">
-                                            {% for key, value in specs.items %}
-                                                <span class="badge bg-info">{{ key }}: {{ value }}</span>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                {% endwith %}
-                            </div>
-                            <div class="card-footer">
-                                <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">View</a>
-                                {% if user.is_authenticated %}
-                                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-success">Add to Cart</a>
-                                {% endif %}
-                            </div>
+                        {% endwith %}
+
+                        <div class="grid">
+                            <a href="{% url 'product_detail' product.id %}" role="button">View</a>
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'add_to_cart' product.id %}" role="button" class="secondary">
+                                    Add to Cart
+                                </a>
+                            {% endif %}
                         </div>
-                    </div>
+                    </article>
                 {% empty %}
-                    <div class="col-12">
-                        <p class="text-center">No products found.</p>
-                    </div>
+                    <p>No products found.</p>
                 {% endfor %}
             </div>
-        </div>
+        </section>
     </div>
-</div>
+</article>
 
 <script>
-// Automatski submit forme kada se promeni checkbox
 document.querySelectorAll('input[type=checkbox]').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
         document.getElementById('filter-form').submit();

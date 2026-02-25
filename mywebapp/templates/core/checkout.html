@@ -3,127 +3,124 @@
 {% block title %}Checkout{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Checkout</h1>
-    
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Delivery Information</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.first_name.id_for_label }}">First Name *</label>
-                                {{ form.first_name }}
-                                {% if form.first_name.errors %}
-                                    <div class="text-danger">{{ form.first_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.last_name.id_for_label }}">Last Name *</label>
-                                {{ form.last_name }}
-                                {% if form.last_name.errors %}
-                                    <div class="text-danger">{{ form.last_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.phone_number.id_for_label }}">Phone Number *</label>
-                                {{ form.phone_number }}
-                                {% if form.phone_number.errors %}
-                                    <div class="text-danger">{{ form.phone_number.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.email.id_for_label }}">Email</label>
-                                {{ form.email }}
-                                {% if form.email.errors %}
-                                    <div class="text-danger">{{ form.email.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.delivery_address.id_for_label }}">Address *</label>
-                            {{ form.delivery_address }}
-                            {% if form.delivery_address.errors %}
-                                <div class="text-danger">{{ form.delivery_address.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="{{ form.delivery_city.id_for_label }}">City *</label>
-                                {{ form.delivery_city }}
-                                {% if form.delivery_city.errors %}
-                                    <div class="text-danger">{{ form.delivery_city.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="{{ form.delivery_zip.id_for_label }}">ZIP Code *</label>
-                                {{ form.delivery_zip }}
-                                {% if form.delivery_zip.errors %}
-                                    <div class="text-danger">{{ form.delivery_zip.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="{{ form.delivery_country.id_for_label }}">Country *</label>
-                                {{ form.delivery_country }}
-                                {% if form.delivery_country.errors %}
-                                    <div class="text-danger">{{ form.delivery_country.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.delivery_notes.id_for_label }}">Delivery Notes</label>
-                            {{ form.delivery_notes }}
-                            {% if form.delivery_notes.errors %}
-                                <div class="text-danger">{{ form.delivery_notes.errors }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3 form-check">
-                            {{ form.save_info }}
-                            <label class="form-check-label" for="{{ form.save_info.id_for_label }}">
-                                Save this information for future orders
-                            </label>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Place Order</button>
-                        <a href="{% url 'view_cart' %}" class="btn btn-secondary">Back to Cart</a>
-                    </form>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Order Summary</h4>
-                </div>
-                <div class="card-body">
-                    {% for item in cart_items %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{{ item.product.name }} x {{ item.quantity }}</span>
-                            <span>${{ item.total }}</span>
-                        </div>
-                    {% endfor %}
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Total:</strong>
-                        <strong>${{ total }}</strong>
+<article>
+    <header>
+        <hgroup>
+            <h1>Checkout</h1>
+            <h2>Delivery Information</h2>
+        </hgroup>
+    </header>
+
+    <div class="grid">
+        <section>
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="grid">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}">First Name *</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div role="alert">{{ form.first_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}">Last Name *</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div role="alert">{{ form.last_name.errors }}</div>
+                        {% endif %}
                     </div>
                 </div>
-            </div>
-        </div>
+
+                <div class="grid">
+                    <div>
+                        <label for="{{ form.phone_number.id_for_label }}">Phone Number *</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div role="alert">{{ form.phone_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div role="alert">{{ form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <label for="{{ form.delivery_address.id_for_label }}">Address *</label>
+                {{ form.delivery_address }}
+                {% if form.delivery_address.errors %}
+                    <div role="alert">{{ form.delivery_address.errors }}</div>
+                {% endif %}
+
+                <div class="grid">
+                    <div>
+                        <label for="{{ form.delivery_city.id_for_label }}">City *</label>
+                        {{ form.delivery_city }}
+                        {% if form.delivery_city.errors %}
+                            <div role="alert">{{ form.delivery_city.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.delivery_zip.id_for_label }}">ZIP Code *</label>
+                        {{ form.delivery_zip }}
+                        {% if form.delivery_zip.errors %}
+                            <div role="alert">{{ form.delivery_zip.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.delivery_country.id_for_label }}">Country *</label>
+                        {{ form.delivery_country }}
+                        {% if form.delivery_country.errors %}
+                            <div role="alert">{{ form.delivery_country.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <label for="{{ form.delivery_notes.id_for_label }}">Delivery Notes</label>
+                {{ form.delivery_notes }}
+                {% if form.delivery_notes.errors %}
+                    <div role="alert">{{ form.delivery_notes.errors }}</div>
+                {% endif %}
+
+                <fieldset>
+                    <label for="{{ form.save_info.id_for_label }}">
+                        {{ form.save_info }}
+                        Save this information for future orders
+                    </label>
+                </fieldset>
+
+                <div class="grid">
+                    <button type="submit">Place Order</button>
+                    <a href="{% url 'view_cart' %}" role="button" class="secondary">Back to Cart</a>
+                </div>
+            </form>
+        </section>
+
+        <aside>
+            <article>
+                <header>
+                    <h3>Order Summary</h3>
+                </header>
+
+                {% for item in cart_items %}
+                    <div class="grid">
+                        <span>{{ item.product.name }} x {{ item.quantity }}</span>
+                        <span>${{ item.total }}</span>
+                    </div>
+                {% endfor %}
+
+                <hr>
+
+                <div class="grid">
+                    <strong>Total:</strong>
+                    <strong>${{ total }}</strong>
+                </div>
+            </article>
+        </aside>
     </div>
-</div>
+</article>
 {% endblock %}

@@ -3,28 +3,34 @@
 {% block title %}{{ title }} - Admin{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>Admin Dashboard</h1>
-        
-        <div>
-            <h2>Statistics</h2>
-            <ul>
-                <li>Total Users: {{ total_users }}</li>
-            </ul>
+<article>
+    <header>
+        <hgroup>
+            <h1>Admin Dashboard</h1>
+            <h2>Overview & Management</h2>
+        </hgroup>
+    </header>
+
+    <section>
+        <h2>Statistics</h2>
+        <ul>
+            <li>Total Users: {{ total_users }}</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Admin Actions</h2>
+        <div class="grid">
+            <a href="{% url 'admin_users' %}" role="button" class="secondary">Manage Users</a>
+            <a href="/admin/" role="button" class="secondary">Django Admin</a>
+            <a href="{% url 'admin_add_product' %}" role="button">Add New Product</a>
         </div>
-        
-        <div>
-            <h2>Admin Actions</h2>
-            <ul>
-                <li><a href="{% url 'admin_users' %}">Manage Users</a></li>
-                <li><a href="/admin/">Django Admin</a></li>
-                <li><a href="{% url 'admin_add_product' %}" class="btn btn-primary">Add New Product</a></li>
-            </ul>
-        </div>
-        
-        <div>
-            <h2>Recent Users</h2>
-            {% if recent_users %}
+    </section>
+
+    <section>
+        <h2>Recent Users</h2>
+        {% if recent_users %}
+            <figure>
                 <table>
                     <thead>
                         <tr>
@@ -47,27 +53,28 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            {% else %}
-                <p>No users found.</p>
-            {% endif %}
-        </div>
-        
-        <div>
-            <h2>Recent Activities</h2>
-            {% if recent_activities %}
-                <ul>
-                    {% for activity in recent_activities %}
-                        <li>
-                            {{ activity.user.username }} - {{ activity.action }} - {{ activity.timestamp|date:"Y-m-d H:i:s" }}
-                            {% if activity.ip_address %}
-                                (IP: {{ activity.ip_address }})
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No recent activities.</p>
-            {% endif %}
-        </div>
-    </div>
+            </figure>
+        {% else %}
+            <p>No users found.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Recent Activities</h2>
+        {% if recent_activities %}
+            <ul>
+                {% for activity in recent_activities %}
+                    <li>
+                        {{ activity.user.username }} - {{ activity.action }} - {{ activity.timestamp|date:"Y-m-d H:i:s" }}
+                        {% if activity.ip_address %}
+                            (IP: {{ activity.ip_address }})
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No recent activities.</p>
+        {% endif %}
+    </section>
+</article>
 {% endblock %}

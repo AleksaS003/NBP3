@@ -3,63 +3,75 @@
 {% block title %}{{ title }} - Admin{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>User Details: {{ view_user.username }}</h1>
-        
-        <div>
-            <a href="{% url 'admin_users' %}">Back to User List</a>
-            <a href="{% url 'admin_dashboard' %}">Back to Admin Dashboard</a>
-        </div>
-        
-        <div>
-            <h2>User Information</h2>
+<article>
+    <header>
+        <hgroup>
+            <h1>User Details: {{ view_user.username }}</h1>
+            <h2>Administrative Overview</h2>
+        </hgroup>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="{% url 'admin_users' %}" role="button" class="secondary">Back to User List</a></li>
+            <li><a href="{% url 'admin_dashboard' %}" role="button" class="secondary">Back to Admin Dashboard</a></li>
+        </ul>
+    </nav>
+
+    <section>
+        <h2>User Information</h2>
+        <figure>
             <table>
-                <tr>
-                    <th>User ID:</th>
-                    <td>{{ view_user.id }}</td>
-                </tr>
-                <tr>
-                    <th>Username:</th>
-                    <td>{{ view_user.username }}</td>
-                </tr>
-                <tr>
-                    <th>Email:</th>
-                    <td>{{ view_user.email|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Phone Number:</th>
-                    <td>{{ view_user.phone_number|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Address:</th>
-                    <td>{{ view_user.address|default:"Not provided" }}</td>
-                </tr>
-                <tr>
-                    <th>Is Admin:</th>
-                    <td>{{ view_user.is_admin|yesno:"Yes,No" }}</td>
-                </tr>
-                <tr>
-                    <th>Is Staff:</th>
-                    <td>{{ view_user.is_staff|yesno:"Yes,No" }}</td>
-                </tr>
-                <tr>
-                    <th>Is Active:</th>
-                    <td>{{ view_user.is_active|yesno:"Yes,No" }}</td>
-                </tr>
-                <tr>
-                    <th>Date Joined:</th>
-                    <td>{{ view_user.date_joined|date:"F j, Y H:i:s" }}</td>
-                </tr>
-                <tr>
-                    <th>Last Login:</th>
-                    <td>{{ view_user.last_login|date:"F j, Y H:i:s" }}</td>
-                </tr>
+                <tbody>
+                    <tr>
+                        <th>User ID:</th>
+                        <td>{{ view_user.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Username:</th>
+                        <td>{{ view_user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ view_user.email|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Phone Number:</th>
+                        <td>{{ view_user.phone_number|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address:</th>
+                        <td>{{ view_user.address|default:"Not provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Is Admin:</th>
+                        <td>{{ view_user.is_admin|yesno:"Yes,No" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Is Staff:</th>
+                        <td>{{ view_user.is_staff|yesno:"Yes,No" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Is Active:</th>
+                        <td>{{ view_user.is_active|yesno:"Yes,No" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date Joined:</th>
+                        <td>{{ view_user.date_joined|date:"F j, Y H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Login:</th>
+                        <td>{{ view_user.last_login|date:"F j, Y H:i:s" }}</td>
+                    </tr>
+                </tbody>
             </table>
-        </div>
-        
-        <div>
-            <h2>User Activity Log</h2>
-            {% if user_activities %}
+        </figure>
+    </section>
+
+    <section>
+        <h2>User Activity Log</h2>
+        {% if user_activities %}
+            <figure>
                 <table>
                     <thead>
                         <tr>
@@ -86,9 +98,10 @@
                         {% endfor %}
                     </tbody>
                 </table>
-            {% else %}
-                <p>No activity logged for this user.</p>
-            {% endif %}
-        </div>
-    </div>
+            </figure>
+        {% else %}
+            <p>No activity logged for this user.</p>
+        {% endif %}
+    </section>
+</article>
 {% endblock %}

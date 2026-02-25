@@ -12,7 +12,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 def home(request):
     """Home page view"""
     context = {
-        'title': 'Welcome to My Web App',
+        'title': 'Welcome to Shongo ',
     }
     return render(request, 'core/home.html', context)
 

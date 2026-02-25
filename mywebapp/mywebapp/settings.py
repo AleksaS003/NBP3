@@ -82,7 +82,7 @@ USE_TZ = True
 import os
 
 # Static files
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Only add STATICFILES_DIRS if the directory exists

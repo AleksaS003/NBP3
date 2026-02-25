@@ -3,16 +3,28 @@
 {% block title %}{{ title }} - Admin{% endblock %}
 
 {% block content %}
-    <div>
-        <h1>User Management</h1>
-        
-        <div>
-            <a href="{% url 'admin_dashboard' %}">Back to Admin Dashboard</a>
-        </div>
-        
-        <div>
-            <h2>All Users</h2>
-            {% if users %}
+<article>
+    <header>
+        <hgroup>
+            <h1>User Management</h1>
+            <h2>Administrative User Overview</h2>
+        </hgroup>
+    </header>
+    
+    <nav>
+        <ul>
+            <li>
+                <a href="{% url 'admin_dashboard' %}" role="button" class="secondary">
+                    Back to Admin Dashboard
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+    <section>
+        <h2>All Users</h2>
+        {% if users %}
+            <figure>
                 <table>
                     <thead>
                         <tr>
@@ -37,15 +49,18 @@
                                 <td>{{ user.is_active|yesno:"Yes,No" }}</td>
                                 <td>{{ user.date_joined|date:"Y-m-d" }}</td>
                                 <td>
-                                    <a href="{% url 'admin_user_detail' user.id %}">View</a>
+                                    <a href="{% url 'admin_user_detail' user.id %}">
+                                        View
+                                    </a>
                                 </td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            {% else %}
-                <p>No users found.</p>
-            {% endif %}
-        </div>
-    </div>
+            </figure>
+        {% else %}
+            <p>No users found.</p>
+        {% endif %}
+    </section>
+</article>
 {% endblock %}
