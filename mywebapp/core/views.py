@@ -7,6 +7,7 @@ from django.contrib import messages
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, CheckoutForm
 from .models import Cart, Order, User, ActivityLog, UserProfile, Product
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db import connection
 
 # Public views
 def home(request):
@@ -156,14 +157,62 @@ def profile_edit(request):
 # Admin views
 @staff_member_required
 def admin_dashboard(request):
-    """Admin dashboard view"""
     total_users = User.objects.count()
-    total_orders = Order.objects.count()
     pending_orders = Order.objects.filter(status='Pending').count()
     recent_users = User.objects.order_by('-date_joined')[:10]
     recent_activities = ActivityLog.objects.all()[:20]
     recent_orders = Order.objects.all().order_by('-created_at')[:10]
-    
+
+    collection = connection.cursor().db_conn.order
+
+    revenue_pipeline = [
+        {
+            "$group": {
+                "_id": None,
+                "totalRevenue": {"$sum": "$total_price"},
+                "totalOrders": {"$sum": 1}
+            }
+        }
+    ]
+
+    revenue_result = list(collection.aggregate(revenue_pipeline))
+
+    total_revenue = 0
+    total_orders = 0
+
+    if revenue_result:
+        total_revenue = revenue_result[0].get("totalRevenue", 0)
+        total_orders = revenue_result[0].get("totalOrders", 0)
+
+    daily_pipeline = [
+        {
+            "$group": {
+                "_id": {
+                    "$dateToString": {
+                        "format": "%Y-%m-%d",
+                        "date": "$created_at"
+                    }
+                },
+                "dailyRevenue": {"$sum": "$total_price"},
+                "orders": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
+
+    daily_data = list(collection.aggregate(daily_pipeline))
+
+    formatted_daily_data = []
+
+    for item in daily_data:
+        formatted_daily_data.append({
+            "date": item.get("_id"),
+            "dailyRevenue": item.get("dailyRevenue", 0),
+            "orders": item.get("orders", 0),
+        })
+
+    daily_data = formatted_daily_data
+
     context = {
         'title': 'Admin Dashboard',
         'total_users': total_users,
@@ -172,7 +221,10 @@ def admin_dashboard(request):
         'recent_users': recent_users,
         'recent_activities': recent_activities,
         'recent_orders': recent_orders,
+        'total_revenue': total_revenue,
+        'daily_data': daily_data,
     }
+
     return render(request, 'core/admin_dashboard.html', context)
 
 @staff_member_required
@@ -245,24 +297,35 @@ def product_list(request):
     # Filter po specifikacijama (JSON polje)
     # Npr. ?ram=8GB&color=silver&storage=256GB
     spec_filters = {}
-    for key, value in request.GET.items():
+
+    for key in request.GET:
         if key.startswith('spec_'):
-            spec_key = key[5:]  # ukloni 'spec_' prefiks
-            spec_filters[spec_key] = value
-    
+            spec_key = key[5:]
+            spec_filters[spec_key] = request.GET.getlist(key)
+
     if spec_filters:
-        # Filtriranje po JSON polju - moramo ručno jer je JSON string
         filtered_products = []
+
         for product in products:
             specs = product.get_specifications()
             match = True
-            for key, value in spec_filters.items():
-                if key in specs and str(specs[key]) != value:
+
+            for key, values in spec_filters.items():
+                if key not in specs or str(specs[key]) not in values:
                     match = False
                     break
+
             if match:
                 filtered_products.append(product.id)
+
         products = products.filter(id__in=filtered_products)
+
+
+    selected_flat = []
+
+    for key, values in spec_filters.items():
+        for v in values:
+            selected_flat.append(f"{key}:{v}")
     
     # Dohvati sve kategorije za dropdown
     categories = Product.objects.values_list('category', flat=True).distinct()
@@ -289,7 +352,7 @@ def product_list(request):
         'selected_category': category,
         'min_price': min_price,
         'max_price': max_price,
-        'selected_specs': spec_filters,
+        'selected_flat': selected_flat,
     }
     return render(request, 'core/product_list.html', context)
 

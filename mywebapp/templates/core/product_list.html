@@ -12,7 +12,6 @@
     </header>
 
     <div class="grid">
-        <!-- Sidebar sa filterima -->
         <aside>
             <article>
                 <header>
@@ -20,59 +19,73 @@
                 </header>
 
                 <form method="get" id="filter-form">
-                    
-                    <!-- Kategorije -->
+
                     <h4>Categories</h4>
-                    <select name="category" onchange="this.form.submit()">
+                    <select name="category">
                         <option value="">All Categories</option>
                         {% for cat in categories %}
-                            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                            <option value="{{ cat }}"
+                                {% if selected_category == cat %}selected{% endif %}>
                                 {{ cat }}
                             </option>
                         {% endfor %}
                     </select>
-                    
-                    <!-- Filter po ceni -->
+
                     <h4>Price Range</h4>
                     <div class="grid">
-                        <input type="number" name="min_price"
-                               placeholder="Min" value="{{ min_price }}" step="0.01">
-                        <input type="number" name="max_price"
-                               placeholder="Max" value="{{ max_price }}" step="0.01">
+                        <input type="number"
+                               name="min_price"
+                               placeholder="Min"
+                               value="{{ min_price }}"
+                               step="0.01">
+
+                        <input type="number"
+                               name="max_price"
+                               placeholder="Max"
+                               value="{{ max_price }}"
+                               step="0.01">
                     </div>
-                    
-                    <!-- Filteri po specifikacijama -->
+
                     {% for spec_name, spec_values in all_specs.items %}
                         <h4>{{ spec_name|title }}</h4>
+
                         {% for value in spec_values %}
                             <label>
                                 <input type="checkbox"
-                                       name="spec_{{ spec_name }}" value="{{ value }}"
-                                       id="spec_{{ spec_name }}_{{ forloop.counter }}"
-                                       {% if selected_specs.spec_name == value %}checked{% endif %}>
+                                       name="spec_{{ spec_name }}"
+                                       value="{{ value }}"
+                                       {% if spec_name|add:":"|add:value in selected_flat %}
+                                           checked
+                                       {% endif %}>
                                 {{ value }}
                             </label>
                         {% endfor %}
                     {% empty %}
                         <p>No specifications available</p>
                     {% endfor %}
-                    
+
                     <div class="grid">
                         <button type="submit">Apply Filters</button>
-                        <a href="{% url 'product_list' %}" role="button" class="secondary">Clear Filters</a>
+                        <a href="{% url 'product_list' %}"
+                           role="button"
+                           class="secondary">
+                            Clear Filters
+                        </a>
                     </div>
+
                 </form>
             </article>
         </aside>
-        
-        <!-- Lista proizvoda -->
+
         <section>
             <div class="grid">
                 {% for product in products %}
                     <article>
                         {% if product.image_url %}
                             <figure>
-                                <img src="{{ product.image_url }}" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                                <img src="{{ product.image_url }}"
+                                     alt="{{ product.name }}"
+                                     style="height: 200px; object-fit: cover;">
                             </figure>
                         {% endif %}
 
@@ -80,8 +93,7 @@
                         <p><small>{{ product.category }}</small></p>
                         <p>{{ product.description|truncatechars:100 }}</p>
                         <p><strong>${{ product.price }}</strong></p>
-                        
-                        <!-- Pregled specifikacija -->
+
                         {% with specs=product.get_specifications %}
                             {% if specs %}
                                 <p>
@@ -93,9 +105,14 @@
                         {% endwith %}
 
                         <div class="grid">
-                            <a href="{% url 'product_detail' product.id %}" role="button">View</a>
+                            <a href="{% url 'product_detail' product.id %}"
+                               role="button">
+                                View
+                            </a>
                             {% if user.is_authenticated %}
-                                <a href="{% url 'add_to_cart' product.id %}" role="button" class="secondary">
+                                <a href="{% url 'add_to_cart' product.id %}"
+                                   role="button"
+                                   class="secondary">
                                     Add to Cart
                                 </a>
                             {% endif %}
@@ -110,8 +127,8 @@
 </article>
 
 <script>
-document.querySelectorAll('input[type=checkbox]').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
+document.querySelectorAll('input[type=checkbox], select[name=category]').forEach(el => {
+    el.addEventListener('change', function() {
         document.getElementById('filter-form').submit();
     });
 });
