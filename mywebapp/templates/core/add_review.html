@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if existing_review %}Edit Review{% else %}Add Review{% endif %} - {{ product.name }}
+{% endblock %}
+
+{% block content %}
+<div class="grid">
+    <div>
+        <article>
+            <header>
+                <hgroup>
+                    <h1>{% if existing_review %}Edit Your Review{% else %}Write a Review{% endif %}</h1>
+                    <h2>for {{ product.name }}</h2>
+                </hgroup>
+            </header>
+
+            {% if not has_purchased and not existing_review %}
+                <div role="alert" class="warning">
+                    <strong>Note:</strong> You can only review products you've purchased.
+                    <a href="{% url 'product_detail' product.id %}">Back to product</a>
+                </div>
+            {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <fieldset>
+                        <legend>Rating</legend>
+                        <div class="grid">
+                            {% for radio in form.rating %}
+                                <label>
+                                    {{ radio.tag }}
+                                    {{ radio.choice_label }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.rating.errors %}
+                            <small class="contrast">{{ form.rating.errors }}</small>
+                        {% endif %}
+                    </fieldset>
+
+                    <label for="{{ form.comment.id_for_label }}">Your Review</label>
+                    {{ form.comment }}
+                    {% if form.comment.errors %}
+                        <small class="contrast">{{ form.comment.errors }}</small>
+                    {% endif %}
+                    <small>Share your experience with this product (optional)</small>
+
+                    <label for="{{ form.image_urls.id_for_label }}">Product Images</label>
+                    {{ form.image_urls }}
+                    {% if form.image_urls.errors %}
+                        <small class="contrast">{{ form.image_urls.errors }}</small>
+                    {% endif %}
+                    <small>{{ form.image_urls.help_text }}</small>
+
+                    <div class="grid">
+                        <button type="submit">
+                            {% if existing_review %}Update Review{% else %}Submit Review{% endif %}
+                        </button>
+                        <a href="{% url 'product_detail' product.id %}" role="button" class="secondary">Cancel</a>
+                    </div>
+                </form>
+            {% endif %}
+        </article>
+    </div>
+
+    <div>
+        <article>
+            <header>
+                <h3>Product Summary</h3>
+            </header>
+            {% if product.image_url %}
+                <figure>
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" style="max-height: 200px; object-fit: contain;">
+                </figure>
+            {% endif %}
+            <h4>{{ product.name }}</h4>
+            <p><strong>${{ product.price }}</strong></p>
+            <p><small>{{ product.category }}</small></p>
+            
+            {% if existing_review %}
+                <hr>
+                <h5>Your Current Review</h5>
+                <p>
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= existing_review.rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </p>
+                {% if existing_review.comment %}
+                    <p>{{ existing_review.comment|truncatechars:100 }}</p>
+                {% endif %}
+            {% endif %}
+        </article>
+    </div>
+</div>
+{% endblock %}

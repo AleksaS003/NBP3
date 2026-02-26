@@ -62,3 +62,43 @@ class CheckoutForm(forms.Form):
         if not re.match(r'^[\d\s\+\-]{6,20}$', phone):
             raise forms.ValidationError('Enter a valid phone number')
         return phone
+    
+class ReviewForm(forms.Form):
+    rating = forms.ChoiceField(
+        choices=[(i, f"{i} ★") for i in range(1, 6)],
+        widget=forms.RadioSelect,
+        required=True,
+        label="Your Rating"
+    )
+    comment = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4, 'placeholder': 'Share your experience with this product...'}),
+        required=False,
+        label="Your Review"
+    )
+    image_urls = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'placeholder': 'Enter image URLs (one per line)'
+        }),
+        required=False,
+        label="Product Images (optional)",
+        help_text="Add links to your product photos, one per line"
+    )
+    
+    def clean_image_urls(self):
+        urls_text = self.cleaned_data.get('image_urls', '')
+        if not urls_text:
+            return []
+        
+        urls = [url.strip() for url in urls_text.split('\n') if url.strip()]
+        
+        import re
+        url_pattern = re.compile(r'^https?://\S+$')
+        valid_urls = []
+        for url in urls:
+            if url_pattern.match(url):
+                valid_urls.append(url)
+            else:
+                raise forms.ValidationError(f"Invalid URL: {url}")
+        
+        return valid_urls

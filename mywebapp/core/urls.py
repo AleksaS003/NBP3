@@ -33,4 +33,8 @@ urlpatterns = [
     path('cart/update/<int:product_id>/', views.update_cart_quantity, name='update_cart_quantity'),
     path('checkout/', views.checkout, name='checkout'),
     path('order-confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
+    
+    # Reviews
+    path('product/<int:product_id>/review/add/', views.add_review, name='add_review'),
+    path('review/<str:review_id>/delete/', views.delete_review, name='delete_review'),  # <-- str umesto int
 ]

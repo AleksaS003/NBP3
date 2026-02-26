@@ -4,12 +4,11 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, CheckoutForm
-from .models import Cart, Order, User, ActivityLog, UserProfile, Product
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, CheckoutForm, ReviewForm
+from .models import Cart, Order, User, ActivityLog, UserProfile, Product, Review
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import connection
 
-# Public views
 def home(request):
     """Home page view"""
     context = {
@@ -31,16 +30,13 @@ def contact(request):
     }
     return render(request, 'core/contact.html', context)
 
-# Authentication views
 def register(request):
     """User registration view"""
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Create user profile
             UserProfile.objects.create(user=user)
-            # Log the activity
             ActivityLog.objects.create(
                 user=user,
                 action='User registered',
@@ -58,7 +54,6 @@ def register(request):
     return render(request, 'core/register.html', context)
 
 def login_view(request):
-    """User login view"""
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -85,7 +80,6 @@ def login_view(request):
     return render(request, 'core/login.html', context)
 
 def logout_view(request):
-    """User logout view"""
     if request.user.is_authenticated:
         ActivityLog.objects.create(
             user=request.user,
@@ -96,10 +90,8 @@ def logout_view(request):
     messages.success(request, 'You have been logged out.')
     return redirect('home')
 
-# Protected views (require login)
 @login_required
 def dashboard(request):
-    """User dashboard view"""
     recent_activities = ActivityLog.objects.filter(user=request.user)[:10]
     recent_orders = Order.objects.filter(user=request.user).order_by('-created_at')[:5]
     
@@ -113,7 +105,6 @@ def dashboard(request):
 
 @login_required
 def profile(request):
-    """User profile view"""
     try:
         profile = request.user.profile
     except UserProfile.DoesNotExist:
@@ -137,7 +128,6 @@ def profile(request):
 
 @login_required
 def profile_edit(request):
-    """Edit user profile view"""
     if request.method == 'POST':
         user = request.user
         user.email = request.POST.get('email', user.email)
@@ -154,7 +144,6 @@ def profile_edit(request):
     }
     return render(request, 'core/profile_edit.html', context)
 
-# Admin views
 @staff_member_required
 def admin_dashboard(request):
     total_users = User.objects.count()
@@ -229,7 +218,6 @@ def admin_dashboard(request):
 
 @staff_member_required
 def admin_users(request):
-    """Admin user management view"""
     users = User.objects.all().order_by('-date_joined')
     
     context = {
@@ -240,7 +228,6 @@ def admin_users(request):
 
 @staff_member_required
 def admin_user_detail(request, user_id):
-    """Admin view user details"""
     try:
         user = User.objects.get(id=user_id)
         user_activities = ActivityLog.objects.filter(user=user)[:20]
@@ -257,24 +244,164 @@ def admin_user_detail(request, user_id):
     }
     return render(request, 'core/admin_user_detail.html', context)
 
-# Product views
+def product_detail(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        
+        has_purchased = False
+        can_review = False
+        user_review = None
+        
+        if request.user.is_authenticated:
+            orders = Order.objects.filter(user=request.user)
+            for order in orders:
+                try:
+                    items = json.loads(order.items)
+                    for item in items:
+                        if item.get('product_id') == product_id:
+                            has_purchased = True
+                            break
+                    if has_purchased:
+                        break
+                except:
+                    continue
+            
+            try:
+                user_review = Review.objects.filter(product=product, user=request.user).first()
+            except:
+                user_review = None
+                
+            can_review = has_purchased and (user_review is None)
+        
+        from django.db import connection
+        db = connection.cursor().db_conn
+        
+        pipeline_avg = [
+            {"$match": {"product_id": product_id, "is_approved": True}},
+            {
+                "$group": {
+                    "_id": None,
+                    "average_rating": {"$avg": "$rating"},
+                    "total_reviews": {"$sum": 1},
+                    "rating_counts": {"$push": "$rating"}
+                }
+            }
+        ]
+        
+        avg_result = list(db.reviews.aggregate(pipeline_avg))
+        
+        avg_rating = 0
+        total_reviews = 0
+        rating_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        
+        if avg_result and len(avg_result) > 0:
+            avg_rating = round(avg_result[0].get('average_rating', 0), 1)
+            total_reviews = avg_result[0].get('total_reviews', 0)
+            
+            if 'rating_counts' in avg_result[0]:
+                for r in avg_result[0]['rating_counts']:
+                    if r in rating_distribution:
+                        rating_distribution[r] += 1
+
+        reviews_cursor = db.reviews.find({
+            "product_id": product_id,
+            "is_approved": True
+        }).sort("created_at", -1)
+        
+        reviews_data = list(reviews_cursor)
+        
+        reviews_list = []
+        for review in reviews_data:
+            user_id = review.get('user_id')
+            username = "Unknown User"
+            
+            if user_id:
+                user_data = db.users.find_one({"_id": user_id})
+                if user_data:
+                    username = user_data.get('username', 'Unknown User')
+            
+            image_urls = []
+            if review.get('image_urls'):
+                try:
+                    if isinstance(review['image_urls'], str):
+                        image_urls = json.loads(review['image_urls'])
+                    elif isinstance(review['image_urls'], list):
+                        image_urls = review['image_urls']
+                except:
+                    image_urls = []
+            elif review.get('image_url'):
+                image_urls = [review['image_url']]
+            
+            created_at = review.get('created_at')
+            if created_at:
+                if hasattr(created_at, 'strftime'):
+                    formatted_date = created_at.strftime("%B %d, %Y")
+                else:
+                    formatted_date = str(created_at)[:10]
+            else:
+                formatted_date = "Unknown date"
+            
+            reviews_list.append({
+                'id': str(review.get('_id')),
+                'user': {
+                    'username': username
+                },
+                'rating': review.get('rating', 0),
+                'comment': review.get('comment', ''),
+                'image_urls': image_urls,
+                'created_at': formatted_date,
+                'can_edit': request.user.is_authenticated and str(review.get('user_id')) == str(request.user.id)
+            })
+        
+        context = {
+            'title': product.name,
+            'product': product,
+            'reviews': reviews_list,
+            'avg_rating': avg_rating,
+            'total_reviews': total_reviews,
+            'rating_distribution': rating_distribution,
+            'has_purchased': has_purchased,
+            'can_review': can_review,
+            'user_review': user_review,
+        }
+        
+        return render(request, 'core/product_detail.html', context)
+        
+    except Product.DoesNotExist:
+        messages.error(request, 'Product not found.')
+        return redirect('product_list')
+    except Exception as e:
+        print(f"Error in product_detail: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        context = {
+            'title': product.name if 'product' in locals() else 'Product',
+            'product': product if 'product' in locals() else None,
+            'reviews': [],
+            'avg_rating': 0,
+            'total_reviews': 0,
+            'rating_distribution': {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+            'has_purchased': False,
+            'can_review': False,
+            'user_review': None,
+        }
+        return render(request, 'core/product_detail.html', context)
+
 def product_list(request):
     """List all products with advanced filtering"""
     products = Product.objects.all()
     
-    # Osnovni filteri
     category = request.GET.get('category')
     if category:
         products = products.filter(category=category)
     
-    # Filter po ceni (opseg)
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     
     if min_price:
         try:
             min_price_float = float(min_price)
-            # Moraš da konvertuješ cenu za poređenje
             all_products = []
             for p in products:
                 if float(str(p.price)) >= min_price_float:
@@ -293,9 +420,7 @@ def product_list(request):
             products = products.filter(id__in=all_products)
         except ValueError:
             pass
-    
-    # Filter po specifikacijama (JSON polje)
-    # Npr. ?ram=8GB&color=silver&storage=256GB
+
     spec_filters = {}
 
     for key in request.GET:
@@ -327,11 +452,9 @@ def product_list(request):
         for v in values:
             selected_flat.append(f"{key}:{v}")
     
-    # Dohvati sve kategorije za dropdown
     categories = Product.objects.values_list('category', flat=True).distinct()
     categories = sorted([c for c in categories if c])
     
-    # Dohvati sve dostupne specifikacije za filtere
     all_specs = {}
     for product in Product.objects.all():
         specs = product.get_specifications()
@@ -340,7 +463,6 @@ def product_list(request):
                 all_specs[key] = set()
             all_specs[key].add(str(value))
     
-    # Konvertuj setove u liste i sortiraj
     for key in all_specs:
         all_specs[key] = sorted(list(all_specs[key]))
     
@@ -356,30 +478,49 @@ def product_list(request):
     }
     return render(request, 'core/product_list.html', context)
 
-def product_detail(request, product_id):
-    """Show product details"""
+@login_required
+def delete_review(request, review_id):
     try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        messages.error(request, 'Product not found.')
+        from bson.objectid import ObjectId
+        
+        from django.db import connection
+        db = connection.cursor().db_conn
+        
+        review = db.reviews.find_one({
+            "_id": ObjectId(review_id),
+            "user_id": request.user.id
+        })
+        
+        if not review:
+            messages.error(request, 'Review not found or you do not have permission to delete it.')
+            return redirect('product_list')
+        
+        product_id = review.get('product_id')
+        
+        if request.method == 'POST':
+            db.reviews.delete_one({"_id": ObjectId(review_id)})
+            
+            try:
+                Review.objects.filter(id=int(review_id) if review_id.isdigit() else None).delete()
+            except:
+                pass
+                
+            messages.success(request, 'Your review has been deleted.')
+        
+        return redirect('product_detail', product_id=product_id)
+        
+    except Exception as e:
+        print(f"Error deleting review: {str(e)}")
+        messages.error(request, f'Error deleting review: {str(e)}')
         return redirect('product_list')
-    
-    context = {
-        'title': product.name,
-        'product': product,
-    }
-    return render(request, 'core/product_detail.html', context)
 
 @staff_member_required
 def admin_add_product(request):
     """Admin view for adding new products with dynamic category selection"""
-    # Dohvati sve postojeće kategorije iz baze
     existing_categories = Product.objects.values_list('category', flat=True).distinct()
-    # Ukloni None i prazne stringove, sortiraj
     existing_categories = sorted([cat for cat in existing_categories if cat])
     
     if request.method == 'POST':
-        # Prikupi podatke iz forme
         name = request.POST.get('name')
         description = request.POST.get('description')
         price = request.POST.get('price')
@@ -389,11 +530,9 @@ def admin_add_product(request):
         image_url = request.POST.get('image_url', '')
         specifications = request.POST.get('specifications', '{}')
         
-        # Ako je uneta nova kategorija, koristi nju
         if new_category:
             category = new_category
         
-        # Validacija
         errors = []
         if not name:
             errors.append("Product name is required.")
@@ -404,7 +543,6 @@ def admin_add_product(request):
         
         if not errors:
             try:
-                # Kreiraj novi proizvod
                 product = Product.objects.create(
                     name=name,
                     description=description,
@@ -428,14 +566,11 @@ def admin_add_product(request):
     }
     return render(request, 'core/admin_add_product.html', context)
 
-# Cart views
 @login_required
 def add_to_cart(request, product_id):
-    """Add product to cart"""
     product = get_object_or_404(Product, id=product_id)
     cart, created = Cart.objects.get_or_create(user=request.user)
     
-    # Učitaj trenutne items iz korpe (JSON string -> list)
     if cart.items:
         try:
             items = json.loads(cart.items)
@@ -444,15 +579,13 @@ def add_to_cart(request, product_id):
     else:
         items = []
     
-    # Proveri da li proizvod već postoji u korpi
     found = False
     for i, item in enumerate(items):
         if isinstance(item, dict) and item.get('product_id') == product_id:
             items[i]['quantity'] = items[i].get('quantity', 0) + 1
             found = True
             break
-    
-    # Ako ne postoji, dodaj novi
+
     if not found:
         items.append({
             'product_id': product_id,
@@ -461,7 +594,6 @@ def add_to_cart(request, product_id):
             'price': str(product.price)
         })
     
-    # Sačuvaj nazad kao JSON string
     cart.items = json.dumps(items)
     cart.save()
     
@@ -470,7 +602,6 @@ def add_to_cart(request, product_id):
 
 @login_required
 def view_cart(request):
-    """View cart contents"""
     try:
         cart = Cart.objects.get(user=request.user)
     except Cart.DoesNotExist:
@@ -479,7 +610,6 @@ def view_cart(request):
     cart_items = []
     total = 0
     
-    # Učitaj items iz korpe
     if cart.items:
         try:
             items = json.loads(cart.items)
@@ -516,7 +646,6 @@ def remove_from_cart(request, product_id):
         if cart.items:
             try:
                 items = json.loads(cart.items)
-                # Filtriraj items (ukloni onaj sa datim product_id)
                 items = [item for item in items if item.get('product_id') != product_id]
                 cart.items = json.dumps(items)
                 cart.save()
@@ -530,7 +659,6 @@ def remove_from_cart(request, product_id):
 
 @login_required
 def update_cart_quantity(request, product_id):
-    """Update quantity of item in cart"""
     if request.method == 'POST':
         quantity = int(request.POST.get('quantity', 1))
         
@@ -559,7 +687,6 @@ def update_cart_quantity(request, product_id):
 
 @login_required
 def checkout(request):
-    """Checkout page - enter delivery information"""
     try:
         cart = Cart.objects.get(user=request.user)
         
@@ -577,7 +704,6 @@ def checkout(request):
             messages.error(request, "Your cart is empty.")
             return redirect('product_list')
         
-        # Izračunaj total za prikaz
         total_price = 0
         cart_items = []
         for item in items:
@@ -598,7 +724,6 @@ def checkout(request):
         if request.method == 'POST':
             form = CheckoutForm(request.POST)
             if form.is_valid():
-                # Pripremi order items za čuvanje
                 order_items = []
                 for item in items:
                     try:
@@ -615,7 +740,6 @@ def checkout(request):
                         continue
                 
                 if order_items:
-                    # Kreiraj order sa podacima iz forme
                     order = Order.objects.create(
                         user=request.user,
                         items=json.dumps(order_items),
@@ -631,7 +755,6 @@ def checkout(request):
                         delivery_notes=form.cleaned_data.get('delivery_notes', '')
                     )
                     
-                    # Sačuvaj podatke u user profil ako je označeno
                     if form.cleaned_data.get('save_info'):
                         user = request.user
                         user.first_name = form.cleaned_data['first_name']
@@ -640,7 +763,6 @@ def checkout(request):
                         user.address = form.cleaned_data['delivery_address']
                         user.save()
                     
-                    # Očisti korpu
                     cart.items = json.dumps([])
                     cart.save()
                     
@@ -649,7 +771,6 @@ def checkout(request):
                 else:
                     messages.error(request, "No valid items in cart.")
         else:
-            # Pre-popuni formu sa podacima iz user profila
             initial_data = {
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
@@ -673,7 +794,6 @@ def checkout(request):
 
 @login_required
 def order_confirmation(request, order_id):
-    """Order confirmation page"""
     try:
         order = Order.objects.get(id=order_id, user=request.user)
         order_items = json.loads(order.items) if order.items else []
@@ -686,3 +806,84 @@ def order_confirmation(request, order_id):
     except Order.DoesNotExist:
         messages.error(request, "Order not found.")
         return redirect('dashboard')
+    
+@login_required
+def add_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    orders = Order.objects.filter(
+        user=request.user,
+        status__in=['Pending', 'Completed', 'Delivered']
+    )
+    
+    has_purchased = False
+    purchased_order = None
+    
+    for order in orders:
+        try:
+            items = json.loads(order.items)
+            for item in items:
+                if str(item.get('product_id')) == str(product_id) or item.get('product_id') == product_id:
+                    has_purchased = True
+                    purchased_order = order
+                    break
+            if has_purchased:
+                break
+        except:
+            continue
+    
+    existing_review = None
+    try:
+        existing_reviews = Review.objects.filter(product=product, user=request.user)
+        if existing_reviews.exists():
+            existing_review = existing_reviews.first()
+    except:
+        existing_review = None
+    
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            image_urls = form.cleaned_data.get('image_urls', [])
+            
+            if existing_review:
+                existing_review.rating = form.cleaned_data['rating']
+                existing_review.comment = form.cleaned_data['comment']
+                existing_review.set_image_urls(image_urls)
+                existing_review.save()
+                messages.success(request, 'Your review has been updated!')
+            else:
+                if not has_purchased:
+                    messages.error(request, 'You can only review products you have purchased.')
+                    return redirect('product_detail', product_id=product_id)
+                
+                review = Review.objects.create(
+                    product=product,
+                    user=request.user,
+                    order=purchased_order if purchased_order else None,
+                    rating=form.cleaned_data['rating'],
+                    comment=form.cleaned_data['comment']
+                )
+                review.set_image_urls(image_urls)
+                review.save()
+                messages.success(request, 'Thank you for your review!')
+            
+            return redirect('product_detail', product_id=product_id)
+    else:
+        if existing_review:
+            initial_data = {
+                'rating': existing_review.rating,
+                'comment': existing_review.comment,
+                'image_urls': '\n'.join(existing_review.get_image_urls())
+            }
+            form = ReviewForm(initial=initial_data)
+        else:
+            form = ReviewForm()
+    
+    context = {
+        'product': product,
+        'form': form,
+        'existing_review': existing_review,
+        'has_purchased': has_purchased,
+    }
+    
+    return render(request, 'core/add_review.html', context)

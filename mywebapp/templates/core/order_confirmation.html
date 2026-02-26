@@ -55,6 +55,24 @@
         </section>
     </div>
 
+{% if order_items %}
+    <hr>
+    <article>
+        <header>
+            <h3>Review Your Purchases</h3>
+        </header>
+        <p>Help other customers by reviewing the products you bought!</p>
+        <div class="grid">
+            {% for item in order_items %}
+                <div>
+                    <p><strong>{{ item.product_name }}</strong></p>
+                    <a href="{% url 'add_review' item.product_id %}" role="button" class="outline">Write a Review</a>
+                </div>
+            {% endfor %}
+        </div>
+    </article>
+{% endif %}
+
     <footer>
         <div class="grid">
             <a href="{% url 'dashboard' %}" role="button">Go to Dashboard</a>

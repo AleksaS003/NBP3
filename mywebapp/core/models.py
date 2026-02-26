@@ -4,7 +4,6 @@ from django.db import models as django_models
 import json
 
 class User(AbstractUser):
-    """Custom User model extending Django's AbstractUser"""
     is_admin = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
@@ -18,7 +17,6 @@ class User(AbstractUser):
         return self.username
 
 class UserProfile(models.Model):
-    """Additional user profile information"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     bio = models.TextField(blank=True)
     profile_picture = models.CharField(max_length=255, blank=True)
@@ -31,7 +29,6 @@ class UserProfile(models.Model):
         return f"Profile for {self.user.username}"
 
 class ActivityLog(models.Model):
-    """Track user activities"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
     action = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -53,7 +50,6 @@ class Product(models.Model):
     stock = models.IntegerField(default=0)
     image_url = models.CharField(max_length=255, blank=True)
     
-    # PROMENA: Umesto JSONField koristimo TextField
     specifications = models.TextField(default='{}', blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,7 +65,6 @@ class Product(models.Model):
         if isinstance(data, dict):
             self.specifications = json.dumps(data)
         elif isinstance(data, str):
-            # Proveri da li je već JSON string
             try:
                 json.loads(data)
                 self.specifications = data
@@ -90,7 +85,6 @@ class Product(models.Model):
             return {}
     
     def save(self, *args, **kwargs):
-        # Osiguraj da je specifications uvek JSON string
         if hasattr(self, 'specifications') and self.specifications:
             if isinstance(self.specifications, dict):
                 self.specifications = json.dumps(self.specifications)
@@ -156,7 +150,6 @@ class Order(models.Model):
             self.items = json.dumps([])
     
     def get_items(self):
-        """Vraća items kao listu"""
         if not self.items:
             return []
         try:
@@ -176,7 +169,6 @@ class Order(models.Model):
 
 class Cart(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
-    # PROMENA: Umesto JSONField koristimo TextField
     items = models.TextField(default='[]', blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -187,7 +179,6 @@ class Cart(models.Model):
         return f"Cart for {self.user.username}"
     
     def set_items(self, items_list):
-        """Čuva listu kao JSON string"""
         if isinstance(items_list, list):
             self.items = json.dumps(items_list)
         elif isinstance(items_list, str):
@@ -200,7 +191,6 @@ class Cart(models.Model):
             self.items = json.dumps([])
     
     def get_items(self):
-        """Vraća items kao listu"""
         if not self.items:
             return []
         try:
@@ -217,3 +207,87 @@ class Cart(models.Model):
         elif not self.items:
             self.items = '[]'
         super().save(*args, **kwargs)
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, related_name='reviews')
+    
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)], help_text="Rating from 1 to 5")
+    comment = models.TextField(blank=True, help_text="Your review comment")
+    
+    image_url = models.TextField(blank=True, help_text="Single image URL (legacy)")
+    image_urls = models.TextField(default='[]', blank=True, help_text="JSON array of image URLs")
+    
+    additional_data = models.TextField(default='{}', blank=True, help_text="Additional metadata")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    is_approved = models.BooleanField(default=True, help_text="Approve this review to show on site")
+    
+    class Meta:
+        db_table = 'reviews'
+        ordering = ['-created_at']
+        unique_together = ['product', 'user']
+    
+    def __str__(self):
+        return f"Review for {self.product.name} by {self.user.username} - {self.rating}★"
+    
+    def get_image_urls(self):
+        if self.image_urls and self.image_urls != '[]':
+            try:
+                if isinstance(self.image_urls, str):
+                    urls = json.loads(self.image_urls)
+                    if isinstance(urls, list):
+                        return urls
+                elif isinstance(self.image_urls, list):
+                    return self.image_urls
+            except:
+                pass
+        
+        if self.image_url:
+            return [self.image_url]
+        
+        return []
+    
+    def set_image_urls(self, urls_list):
+        if isinstance(urls_list, list):
+            self.image_urls = json.dumps(urls_list)
+        elif isinstance(urls_list, str):
+            try:
+                json.loads(urls_list)
+                self.image_urls = urls_list
+            except:
+                self.image_urls = json.dumps([])
+        else:
+            self.image_urls = json.dumps([])
+    
+    def get_additional_data(self):
+        if not self.additional_data:
+            return {}
+        try:
+            if isinstance(self.additional_data, str):
+                return json.loads(self.additional_data)
+            return self.additional_data
+        except:
+            return {}
+    
+    def save(self, *args, **kwargs):
+        if hasattr(self, 'image_urls') and self.image_urls:
+            if isinstance(self.image_urls, list):
+                self.image_urls = json.dumps(self.image_urls)
+        elif not self.image_urls:
+            self.image_urls = '[]'
+            
+        if hasattr(self, 'additional_data') and self.additional_data:
+            if isinstance(self.additional_data, dict):
+                self.additional_data = json.dumps(self.additional_data)
+        elif not self.additional_data:
+            self.additional_data = '{}'
+            
+        super().save(*args, **kwargs)
+    
+    @property
+    def formatted_created_at(self):
+        return self.created_at.strftime("%B %d, %Y")

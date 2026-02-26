@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load core_extras %}
 
 {% block title %}{{ product.name }}{% endblock %}
 
@@ -21,7 +22,22 @@
                 </hgroup>
             </header>
 
-            <h3>${{ product.price }}</h3>
+            <div class="grid">
+                <div>
+                    <h3>${{ product.price }}</h3>
+                </div>
+                <div>
+                    {% if total_reviews > 0 %}
+                        <p>
+                            <strong>{{ avg_rating }}</strong> / 5 ★
+                            <small>({{ total_reviews }} review{{ total_reviews|pluralize }})</small>
+                        </p>
+                    {% else %}
+                        <p><small>No reviews yet</small></p>
+                    {% endif %}
+                </div>
+            </div>
+
             <p><strong>Stock:</strong> {{ product.stock }} units</p>
             <p>{{ product.description }}</p>
             
@@ -54,4 +70,113 @@
         </section>
     </div>
 </article>
+
+<!-- Reviews Section -->
+<article>
+    <header>
+        <hgroup>
+            <h2>Customer Reviews</h2>
+            <h3>What our customers say about {{ product.name }}</h3>
+        </hgroup>
+    </header>
+
+    {% if total_reviews > 0 %}
+        <!-- Rating Summary -->
+        <div class="grid">
+            <div>
+                <h3>{{ avg_rating }} <small>/ 5</small></h3>
+                <p>
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= avg_rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </p>
+                <p><strong>{{ total_reviews }}</strong> verified reviews</p>
+            </div>
+            
+            <div>
+                {% for rating in "54321"|make_list %}
+                    <div class="grid" style="grid-template-columns: 1fr 3fr 1fr;">
+                        <span>{{ rating }} ★</span>
+                        <progress value="{{ rating_distribution|get_item:rating }}" max="{{ total_reviews }}"></progress>
+                        <span>{{ rating_distribution|get_item:rating }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <hr>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        <div class="grid">
+            {% if can_review %}
+                <a href="{% url 'add_review' product.id %}" role="button" class="outline">Write a Review</a>
+            {% elif user_review %}
+                <div>
+                    <p>You've already reviewed this product.</p>
+                    <div class="grid">
+                        <a href="{% url 'add_review' product.id %}" role="button" class="outline">Edit Your Review</a>
+                        <form method="post" action="{% url 'delete_review' user_review.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="outline secondary" onclick="return confirm('Are you sure you want to delete your review?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            {% elif has_purchased %}
+                <a href="{% url 'add_review' product.id %}" role="button">Write a Review</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if reviews %}
+        {% for review in reviews %}
+            <article>
+                <div class="grid">
+                    <div>
+                        <p>
+                            <strong>{{ review.user.username }}</strong>
+                            <small>{{ review.created_at }}</small>
+                        </p>
+                        <p>
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </p>
+                        {% if review.comment %}
+                            <p>{{ review.comment }}</p>
+                        {% endif %}
+                        
+                        {% if review.image_urls %}
+                            <details>
+                                <summary>View Photos ({{ review.image_urls|length }})</summary>
+                                <div class="grid">
+                                    {% for img_url in review.image_urls %}
+                                        <figure>
+                                            <img src="{{ img_url }}" alt="Review photo" style="max-height: 100px; object-fit: cover;">
+                                            <figcaption><small><a href="{{ img_url }}" target="_blank">View full size</a></small></figcaption>
+                                        </figure>
+                                    {% endfor %}
+                                </div>
+                            </details>
+                        {% endif %}
+                        
+                        {% if review.can_edit %}
+                            <small>
+                                <a href="{% url 'add_review' product.id %}">Edit</a> |
+                                <form method="post" action="{% url 'delete_review' review.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="link" onclick="return confirm('Delete this review?')">Delete</button>
+                                </form>
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        {% endfor %}
+    {% else %}
+        <p>No reviews yet. Be the first to review this product!</p>
+    {% endif %}
+</article>
 {% endblock %}
+
+{% comment %} Dodaj na početak fajla ili u poseban templatetags fajl {% endcomment %}
+{% load core_extras %}
