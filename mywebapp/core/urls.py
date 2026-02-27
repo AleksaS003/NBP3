@@ -36,5 +36,10 @@ urlpatterns = [
     
     # Reviews
     path('product/<int:product_id>/review/add/', views.add_review, name='add_review'),
-    path('review/<str:review_id>/delete/', views.delete_review, name='delete_review'),  # <-- str umesto int
+    path('review/<str:review_id>/delete/', views.delete_review, name='delete_review'),
+
+    # contact messages
+    path('dashboard/admin/messages/', views.admin_contact_messages, name='admin_contact_messages'),
+    path('dashboard/admin/message/<str:message_id>/', views.admin_contact_message_detail, name='admin_contact_message_detail'),
+    path('dashboard/admin/message/<str:message_id>/delete/', views.admin_contact_message_delete, name='admin_contact_message_delete'),
 ]

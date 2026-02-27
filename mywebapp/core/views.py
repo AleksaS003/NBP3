@@ -8,30 +8,132 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfile
 from .models import Cart, Order, User, ActivityLog, UserProfile, Product, Review
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import connection
+from .models import Cart, Order, User, ActivityLog, UserProfile, Product, Review, ContactMessage
 
 def home(request):
-    """Home page view"""
     context = {
         'title': 'Welcome to Shongo ',
     }
     return render(request, 'core/home.html', context)
 
 def about(request):
-    """About page view"""
     context = {
         'title': 'About Us',
     }
     return render(request, 'core/about.html', context)
 
 def contact(request):
-    """Contact page view"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+        
+        if name and email and subject and message:
+            try:
+                contact_message = ContactMessage(
+                    name=name,
+                    email=email,
+                    subject=subject,
+                    message=message,
+                    ip_address=request.META.get('REMOTE_ADDR')
+                )
+                
+                if request.user.is_authenticated:
+                    contact_message.user = request.user
+                
+                contact_message.save()
+                
+                messages.success(request, 'Thank you for your message! We\'ll get back to you soon.')
+                return redirect('contact')
+            except Exception as e:
+                messages.error(request, 'There was an error sending your message. Please try again.')
+        else:
+            messages.error(request, 'Please fill in all fields.')
+    
     context = {
         'title': 'Contact Us',
     }
     return render(request, 'core/contact.html', context)
 
+@staff_member_required
+def admin_contact_messages(request):
+    from django.db import connection
+    db = connection.cursor().db_conn
+    
+    filter_status = request.GET.get('filter', 'all')
+    
+    mongo_filter = {}
+    if filter_status == 'unread':
+        mongo_filter['is_read'] = False
+    elif filter_status == 'read':
+        mongo_filter['is_read'] = True
+    
+    messages_cursor = db.contact_messages.find(mongo_filter).sort('created_at', -1)
+    messages_list = list(messages_cursor)
+    
+    for msg in messages_list:
+        msg['id'] = str(msg['_id'])  # Konvertuj ObjectId u string
+        if msg.get('user_id'):
+            user = db.users.find_one({'_id': msg['user_id']})
+            if user:
+                msg['user'] = user
+    
+    total_messages = db.contact_messages.count_documents({})
+    unread_count = db.contact_messages.count_documents({'is_read': False})
+    
+    context = {
+        'title': 'Contact Messages',
+        'messages': messages_list,
+        'total_messages': total_messages,
+        'unread_count': unread_count,
+        'current_filter': filter_status,
+    }
+    return render(request, 'core/admin_contact_messages.html', context)
+
+@staff_member_required
+def admin_contact_message_detail(request, message_id):
+    from django.db import connection
+    from bson.objectid import ObjectId
+    db = connection.cursor().db_conn
+    
+    message = db.contact_messages.find_one({'_id': ObjectId(message_id)})
+    
+    if not message:
+        messages.error(request, 'Message not found.')
+        return redirect('admin_contact_messages')
+    
+    db.contact_messages.update_one(
+        {'_id': ObjectId(message_id)},
+        {'$set': {'is_read': True}}
+    )
+    message['is_read'] = True
+    message['id'] = str(message['_id'])
+    
+    if message.get('user_id'):
+        user = db.users.find_one({'_id': message['user_id']})
+        if user:
+            message['user'] = user
+    
+    context = {
+        'title': f'Message from {message.get("name")}',
+        'message': message,
+    }
+    return render(request, 'core/admin_contact_message_detail.html', context)
+
+@staff_member_required
+def admin_contact_message_delete(request, message_id):
+    if request.method == 'POST':
+        from django.db import connection
+        from bson.objectid import ObjectId
+        db = connection.cursor().db_conn
+        
+        db.contact_messages.delete_one({'_id': ObjectId(message_id)})
+        messages.success(request, 'Message deleted successfully.')
+    
+    return redirect('admin_contact_messages')
+
 def register(request):
-    """User registration view"""
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():

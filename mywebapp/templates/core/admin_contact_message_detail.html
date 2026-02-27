@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<article>
+    <header>
+        <hgroup>
+            <h1>Message from {{ message.name }}</h1>
+            <h2>Received: {{ message.created_at|date:"F j, Y H:i" }}</h2>
+        </hgroup>
+    </header>
+
+    <div class="grid">
+        <section>
+            <article>
+                <header>
+                    <h3>Contact Information</h3>
+                </header>
+                <p><strong>Name:</strong> {{ message.name }}</p>
+                <p><strong>Email:</strong> {{ message.email }}</p>
+                {% if message.user %}
+                    <p><strong>Registered User:</strong> {{ message.user.username }}</p>
+                {% endif %}
+                <p><strong>IP Address:</strong> {{ message.ip_address|default:"Not available" }}</p>
+                <p><strong>Status:</strong> 
+                    {% if message.is_read %}
+                        <mark class="secondary">Read</mark>
+                    {% else %}
+                        <mark>Unread</mark>
+                    {% endif %}
+                </p>
+            </article>
+        </section>
+
+        <section>
+            <article>
+                <header>
+                    <h3>Message Details</h3>
+                </header>
+                <p><strong>Subject:</strong> {{ message.subject }}</p>
+                <hr>
+                <p><strong>Message:</strong></p>
+                <p>{{ message.message|linebreaks }}</p>
+            </article>
+        </section>
+    </div>
+
+    <footer>
+        <div class="grid">
+            <a href="{% url 'admin_contact_messages' %}" role="button" class="secondary">Back to Messages</a>
+            <form method="post" action="{% url 'admin_contact_message_delete' message.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="outline secondary" onclick="return confirm('Delete this message?')">Delete Message</button>
+            </form>
+        </div>
+    </footer>
+</article>
+{% endblock %}
