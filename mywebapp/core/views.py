@@ -350,6 +350,14 @@ def product_detail(request, product_id):
     try:
         product = Product.objects.get(id=product_id)
         
+        # Debug za specifikacije
+        specs = product.get_specifications()
+        print(f"DEBUG - Product: {product.name}")
+        print(f"DEBUG - Specifications raw: {product.specifications}")
+        print(f"DEBUG - Specifications parsed: {specs}")
+        print(f"DEBUG - Specifications type: {type(specs)}")
+        print(f"DEBUG - Is empty: {not specs}")
+        
         has_purchased = False
         can_review = False
         user_review = None

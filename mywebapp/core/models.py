@@ -74,7 +74,6 @@ class Product(models.Model):
             self.specifications = json.dumps({})
     
     def get_specifications(self):
-        """Vraća specifications kao dict"""
         if not self.specifications:
             return {}
         try:
