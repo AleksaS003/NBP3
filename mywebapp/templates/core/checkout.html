@@ -95,7 +95,7 @@
 
                 <div class="grid">
                     <button type="submit">Place Order</button>
-                    <a href="{% url 'view_cart' %}" role="button" class="secondary">Back to Cart</a>
+                    <a href="{% url 'view_cart' %}" role="button" class="secondary fix-height2">Back to Cart</a>
                 </div>
             </form>
         </section>
@@ -109,7 +109,7 @@
                 {% for item in cart_items %}
                     <div class="grid">
                         <span>{{ item.product.name }} x {{ item.quantity }}</span>
-                        <span>${{ item.total }}</span>
+                        <span>{{ item.total }}RSD</span>
                     </div>
                 {% endfor %}
 
@@ -117,7 +117,7 @@
 
                 <div class="grid">
                     <strong>Total:</strong>
-                    <strong>${{ total }}</strong>
+                    <strong>{{ total }}RSD</strong>
                 </div>
             </article>
         </aside>

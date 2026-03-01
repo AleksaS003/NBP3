@@ -1,0 +1,26 @@
+a[role="button"].fix-height {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: normal;
+    height: 2.5rem; 
+}
+
+a[role="button"].fix-height2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: normal;
+    height: 3.2rem; 
+}
+
+a[role="button"].fix-height3 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: normal;
+    height: 3.5rem; 
+}

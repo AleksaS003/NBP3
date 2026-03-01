@@ -21,6 +21,9 @@ urlpatterns = [
     path('dashboard/admin/users/', views.admin_users, name='admin_users'),
     path('dashboard/admin/user/<int:user_id>/', views.admin_user_detail, name='admin_user_detail'),
     path('dashboard/admin/products/add/', views.admin_add_product, name='admin_add_product'),
+    path('dashboard/admin/products/', views.admin_product_list, name='admin_product_list'),
+    path('dashboard/admin/products/<int:product_id>/edit/', views.admin_edit_product, name='admin_edit_product'),
+    path('dashboard/admin/products/<int:product_id>/delete/', views.admin_delete_product, name='admin_delete_product'),
     
     # Products
     path('products/', views.product_list, name='product_list'),

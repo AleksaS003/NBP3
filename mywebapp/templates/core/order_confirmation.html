@@ -36,7 +36,7 @@
                 {% for item in order_items %}
                     <div class="grid">
                         <span>{{ item.product_name }} x {{ item.quantity }}</span>
-                        <span>${{ item.total }}</span>
+                        <span>{{ item.total }}RSD</span>
                     </div>
                 {% endfor %}
 
@@ -44,7 +44,7 @@
 
                 <div class="grid">
                     <strong>Total:</strong>
-                    <strong>${{ order.total_price }}</strong>
+                    <strong>{{ order.total_price }}RSD</strong>
                 </div>
 
                 <hr>

@@ -84,7 +84,7 @@ def admin_contact_messages(request):
     
     context = {
         'title': 'Contact Messages',
-        'messages': messages_list,
+        'contact_messages': messages_list,
         'total_messages': total_messages,
         'unread_count': unread_count,
         'current_filter': filter_status,
@@ -675,6 +675,85 @@ def admin_add_product(request):
         'existing_categories': existing_categories,
     }
     return render(request, 'core/admin_add_product.html', context)
+
+
+@staff_member_required
+def admin_product_list(request):
+    products = Product.objects.all().order_by('-created_at')
+    return render(request, 'core/admin_product_list.html', {
+        'title': 'Manage Products',
+        'products': products
+    })
+
+
+@staff_member_required
+def admin_edit_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    existing_categories = Product.objects.values_list('category', flat=True).distinct()
+    existing_categories = sorted([cat for cat in existing_categories if cat])
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        price = request.POST.get('price')
+        category = request.POST.get('category')
+        new_category = request.POST.get('new_category', '').strip()
+        stock = request.POST.get('stock', 0)
+        image_url = request.POST.get('image_url', '')
+        specifications = request.POST.get('specifications', '{}')
+
+        if new_category:
+            category = new_category
+
+        errors = []
+        if not name:
+            errors.append("Product name is required.")
+        if not price:
+            errors.append("Price is required.")
+        if not category:
+            errors.append("Category is required.")
+
+        if not errors:
+            try:
+                product.name = name
+                product.description = description
+                product.price = price
+                product.category = category
+                product.stock = int(stock) if stock else 0
+                product.image_url = image_url
+                product.specifications = specifications
+                product.save()
+
+                messages.success(request, f'Product "{product.name}" updated successfully!')
+                return redirect('admin_product_list')
+            except Exception as e:
+                messages.error(request, f'Error updating product: {str(e)}')
+        else:
+            for error in errors:
+                messages.error(request, error)
+
+    return render(request, 'core/admin_edit_product.html', {
+        'title': 'Edit Product',
+        'product': product,
+        'existing_categories': existing_categories,
+    })
+
+@staff_member_required
+def admin_delete_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == "POST":
+        try:
+            product_name = product.name
+            product.delete()
+            messages.success(request, f'Product "{product_name}" deleted successfully.')
+        except Exception as e:
+            messages.error(request, f'Error deleting product: {str(e)}')
+
+        return redirect("admin_product_list")
+
+    return redirect("admin_product_list")
 
 @login_required
 def add_to_cart(request, product_id):

@@ -9,20 +9,36 @@
             <h1>Contact Messages</h1>
             <h2>Manage user inquiries</h2>
         </hgroup>
+
         <div class="grid">
             <div>
                 <p><strong>Total Messages:</strong> {{ total_messages }}</p>
                 <p><strong>Unread:</strong> {{ unread_count }}</p>
             </div>
-            <div>
-                <a href="?filter=all" role="button" class="{% if current_filter == 'all' %}contrast{% else %}secondary outline{% endif %}">All</a>
-                <a href="?filter=unread" role="button" class="{% if current_filter == 'unread' %}contrast{% else %}secondary outline{% endif %}">Unread</a>
-                <a href="?filter=read" role="button" class="{% if current_filter == 'read' %}contrast{% else %}secondary outline{% endif %}">Read</a>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <a href="?filter=all"
+                   role="button"
+                   class="{% if current_filter == 'all' %}contrast fix-height{% else %}secondary outline fix-height{% endif %}">
+                    All
+                </a>
+
+                <a href="?filter=unread"
+                   role="button"
+                   class="{% if current_filter == 'unread' %}contrast fix-height{% else %}secondary outline fix-height{% endif %}">
+                    Unread
+                </a>
+
+                <a href="?filter=read"
+                   role="button"
+                   class="{% if current_filter == 'read' %}contrast fix-height{% else %}secondary outline fix-height{% endif %}">
+                    Read
+                </a>
             </div>
         </div>
     </header>
 
-    {% if messages %}
+    {% if contact_messages %}
         <figure>
             <table>
                 <thead>
@@ -35,9 +51,10 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    {% for msg in messages %}
-                        <tr>
+                    {% for msg in contact_messages %}
+                        <tr {% if not msg.is_read %}style="background-color: rgba(255, 255, 0, 0.05);" {% endif %}>
                             <td>
                                 {% if msg.is_read %}
                                     <mark class="secondary">Read</mark>
@@ -45,16 +62,29 @@
                                     <mark>Unread</mark>
                                 {% endif %}
                             </td>
+
                             <td>{{ msg.created_at|date:"Y-m-d H:i" }}</td>
                             <td>{{ msg.name }}</td>
                             <td>{{ msg.email }}</td>
                             <td>{{ msg.subject|truncatechars:30 }}</td>
+
                             <td>
-                                <div class="grid">
-                                    <a href="{% url 'admin_contact_message_detail' msg.id %}" role="button" class="outline">View</a>
-                                    <form method="post" action="{% url 'admin_contact_message_delete' msg.id %}" style="display: inline;">
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="{% url 'admin_contact_message_detail' msg.id %}"
+                                       role="button"
+                                       class="secondary fix-height2">
+                                        View
+                                    </a>
+
+                                    <form method="post"
+                                          action="{% url 'admin_contact_message_delete' msg.id %}"
+                                          style="margin: 0;">
                                         {% csrf_token %}
-                                        <button type="submit" class="outline secondary" onclick="return confirm('Delete this message?')">Delete</button>
+                                        <button type="submit"
+                                                class="outline contrast"
+                                                onclick="return confirm('Delete this message?')">
+                                            Delete
+                                        </button>
                                     </form>
                                 </div>
                             </td>

@@ -48,7 +48,7 @@
 
     <footer>
         <div class="grid">
-            <a href="{% url 'admin_contact_messages' %}" role="button" class="secondary">Back to Messages</a>
+            <a href="{% url 'admin_contact_messages' %}" role="button" class="secondary fix-height2">Back to Messages</a>
             <form method="post" action="{% url 'admin_contact_message_delete' message.id %}" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="outline secondary" onclick="return confirm('Delete this message?')">Delete Message</button>

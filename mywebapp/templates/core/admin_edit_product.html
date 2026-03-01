@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Product{% endblock %}
+
+{% block content %}
+<article>
+  <header>
+    <hgroup>
+      <h1>Edit Product</h1>
+      <h2>{{ product.name }}</h2>
+    </hgroup>
+  </header>
+
+  <div class="grid">
+    <section>
+      <form method="post">
+        {% csrf_token %}
+
+        <label for="name">Product Name *</label>
+        <input type="text" id="name" name="name" required value="{{ product.name }}">
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="4">{{ product.description }}</textarea>
+
+        <div class="grid">
+          <div>
+            <label for="price">Price *</label>
+            <input type="number" step="0.01" id="price" name="price" required value="{{ product.price }}">
+          </div>
+          <div>
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" name="stock" value="{{ product.stock }}">
+          </div>
+        </div>
+
+        <label for="category">Category *</label>
+        <select id="category" name="category">
+          <option value="">-- Select existing category --</option>
+          {% for cat in existing_categories %}
+            <option value="{{ cat }}" {% if product.category == cat %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+        <small>Or add a new category below</small>
+
+        <label for="new_category">New Category</label>
+        <input type="text" id="new_category" name="new_category"
+               placeholder="Enter new category if not in list">
+
+        <label for="image_url">Image URL</label>
+        <input type="url" id="image_url" name="image_url" value="{{ product.image_url }}">
+
+        <label for="specifications">Specifications (JSON format)</label>
+        <textarea id="specifications" name="specifications" rows="3">{{ product.specifications }}</textarea>
+        <small>
+          Example: {"color": "silver", "ram": "8GB", "storage": "256GB", "processor": "M1"}
+        </small>
+        <div id="json-error" role="alert" style="display:none;">Invalid JSON format</div>
+
+        <script>
+          document.querySelector('form').addEventListener('submit', function(e) {
+            const specs = document.getElementById('specifications').value;
+            try {
+              JSON.parse(specs);
+            } catch (error) {
+              e.preventDefault();
+              document.getElementById('json-error').style.display = 'block';
+            }
+          });
+        </script>
+
+        <div class="grid">
+          <button type="submit">Save Changes</button>
+          <a href="{% url 'admin_product_list' %}" role="button" class="secondary fix-height2">Cancel</a>
+        </div>
+      </form>
+    </section>
+
+    <aside>
+      <article>
+        <header>
+          <h3>Tips</h3>
+        </header>
+
+        <ul>
+          <li>✓ Required fields are marked with *</li>
+          <li>✓ Select existing category or create new one</li>
+          <li>✓ Specifications must be valid JSON</li>
+        </ul>
+
+        <hr>
+
+        <h4>Existing Categories:</h4>
+        <div class="category-list">
+          {% for cat in existing_categories %}
+            <button type="button" class="secondary outline">{{ cat }}</button>
+          {% empty %}
+            <p>No categories yet</p>
+          {% endfor %}
+        </div>
+      </article>
+    </aside>
+  </div>
+</article>
+
+<style>
+  .category-list button {
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+</style>
+{% endblock %}

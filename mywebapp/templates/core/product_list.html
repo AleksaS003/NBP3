@@ -70,8 +70,7 @@
                         <button type="submit" style="font-size: 0.9rem; padding: 0.5rem;">Apply Filters</button>
                         <a href="{% url 'product_list' %}"
                            role="button"
-                           class="secondary"
-                           style="font-size: 0.9rem; padding: 0.5rem; text-align: center;">
+                           class="secondary fix-height">
                             Clear
                         </a>
                     </div>
@@ -95,7 +94,7 @@
                         <h3 style="font-size: 1.1rem; margin: 0.5rem 0 0.25rem 0;">{{ product.name }}</h3>
                         <p style="font-size: 0.8rem; margin: 0 0 0.25rem 0; color: #666;"><small>{{ product.category }}</small></p>
                         <p style="font-size: 0.9rem; margin: 0.25rem 0; flex-grow: 1;">{{ product.description|truncatechars:80 }}</p>
-                        <p style="font-size: 1.1rem; font-weight: bold; margin: 0.5rem 0;"><strong>${{ product.price }}</strong></p>
+                        <p style="font-size: 1.1rem; font-weight: bold; margin: 0.5rem 0;"><strong>{{ product.price }}RSD</strong></p>
 
                         {% with specs=product.get_specifications %}
                             {% if specs %}
