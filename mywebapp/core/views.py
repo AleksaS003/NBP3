@@ -944,6 +944,31 @@ def checkout(request):
                         delivery_notes=form.cleaned_data.get('delivery_notes', '')
                     )
                     
+                    
+                    for item in order_items:
+                        try:
+                            product = Product.objects.get(id=item['product_id'])
+                            quantity = item['quantity']
+
+                            if product.stock >= quantity:
+                                db = connection.cursor().db_conn
+                                from bson.objectid import ObjectId
+
+                                db.products.update_one(
+                                    {'id': product.id},
+                                    {'$inc': {'stock': -quantity}}
+                                )
+                            else:
+                                messages.error(
+                                    request,
+                                    f"Not enough stock for {product.name}. Available: {product.stock}"
+                                )
+                                order.delete()
+                                return redirect('view_cart')
+
+                        except Product.DoesNotExist:
+                            continue
+
                     if form.cleaned_data.get('save_info'):
                         user = request.user
                         user.first_name = form.cleaned_data['first_name']
