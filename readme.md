@@ -1,14 +1,24 @@
+## Shongo - Online Prodavnica
+
+# Potrebno je imati:
+docker
+docker-compose
+
+# Pokretanje:
+
+
 # 1. Uđite u kontejner
-docker-compose exec web bash
+```docker-compose exec web bash```
 
 # 2. Napravite migracije
-python manage.py makemigrations core
+```python manage.py makemigrations core```
 
 # 3. Primenite migracije
-python manage.py migrate core
+```python manage.py migrate core```
 
 # 4. Izlaz
-exit
+```exit```
 
-# 5. Restartujte aplikaciju (opciono)
-docker-compose restart web
+# 5. pokretanje
+
+```docker-compose up -d --build```
